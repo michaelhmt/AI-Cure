@@ -24,10 +24,11 @@ class ScreenReaderBase():
     def load_image(self, image_path):
         # type: (str) -> None
         """
-        Load an image an convert image into OpenCv2 and convert it to Grayscale
+        Load an image in cv2 run any treatment we need on the image
 
-        :param image_path:
-        :return:
+        Args:
+            image_path (str): path to the image on disk
+
         """
 
         # load the image and convert to grayscale
@@ -39,6 +40,17 @@ class ScreenReaderBase():
 
 
     def image_analysis(self, image_path):
+        # type: (str) -> dict
+        """
+        Load an image and check region of interests(roi) for
+        readable text and return a found text.
+
+        Args:
+            image_path (str): path to the image on disk
+
+        Returns:
+
+        """
         self.load_image(image_path)
         image_analysis = dict()
 
@@ -50,6 +62,18 @@ class ScreenReaderBase():
 
     def check_roi(self, roi_coords, debug_show=False):
         # type: (dict[str, int], bool) -> str
+        """
+        check a single region of interest from the loaded image
+
+        Args:
+            roi_coords (dict): dict for the coord data for the roi
+            debug_show (bool): should we display the image as
+            we find them, for debuging and testing
+
+        Returns:
+            (str) found text from the roi
+
+        """
         roi = self.image[roi_coords['start_y']:roi_coords['end_y'],
                          roi_coords['start_x']:roi_coords['end_x']]
 
