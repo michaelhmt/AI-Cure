@@ -8,14 +8,14 @@ from screen_reader.screen_reader_constants import TESSERACT_DEFAULT_WIN_INSTALL_
                                                   TESSERACT_LSTMF_WIN_EXE, TESSERACT_EN_LAST_CHECKPOINT
 from screen_reader.font_train.training_utils import file_path_generator
 
-
+# psm 6 assume all the text data is on roughly the same line
 LSTM_CMD = '"{tes_exe}" {train_image} {lstm_output} --psm 6 lstm.train'
-FINE_TUNE_CMD = '"{lstmf_train_exe}" ' \
+FINE_TUNE_CMD = 'start cmd.exe /c "{lstmf_train_exe}" ' \
                 "--model_output {output_dir} " \
                 "--traineddata {base_model} "\
                 "--train_listfile {training_list} " \
                 "--max_iterations {training_iterations} " \
-                "--continue_from {last_check} "
+                "--continue_from {last_check}   PAUSE"
 
 class FontTrainer:
     own_dir = pathlib.Path(__file__).parent.resolve()
@@ -119,12 +119,12 @@ class FontTrainer:
 
         # make training files list document
         training_file_list_txt = os.path.join(self.model_dir, "training_files.txt")
-        with open(training_file_list_txt, "w+") as training_list_file:
+        with open(training_file_list_txt, "w+", newline="\n") as training_list_file:
             for lstmf_file in self.lstmf_files:
                 # this needs to be unix line ending otherwise things get breaky
                 training_list_file.write(lstmf_file + '\n')
         cmd = FINE_TUNE_CMD.format(lstmf_train_exe=TESSERACT_LSTMF_WIN_EXE,
-                                   output_dir=self.model_dir,
+                                   output_dir=os.path.join(self.model_dir, "hcure_font_model"),
                                    base_model=self.base_model,
                                    training_list=training_file_list_txt,
                                    training_iterations=steps,
@@ -132,7 +132,7 @@ class FontTrainer:
 
         # call the cmd and wait for this to finish will bring up a cmd window
         print(f"running {cmd}")
-        subprocess.call(cmd, shell=True)
+        subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
     def train(self, steps=4000):
         # make and collect lstmf files for training
