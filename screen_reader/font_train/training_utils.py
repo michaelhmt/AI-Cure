@@ -4,6 +4,7 @@ import subprocess
 import pathlib
 import shutil
 import time
+from typing import Union
 
 # own modules
 from screen_reader.screen_reader_constants import TESSERACT_DEFAULT_WIN_INSTALL_PATH
@@ -12,7 +13,21 @@ BOX_CMD = "{tes_exe} {image_path} {box_path} batch.nochop makebox"
 DEFAULT_BOX = os.path.join(pathlib.Path(__file__).parent.resolve(), "default_box.box")
 GAME_CAPTURES_DIR = os.path.join(pathlib.Path(__file__).parent.resolve(), "game_captures")
 
+
 def make_box_file_for_dir(root_dir, image_exts=("png", "jpg"), output_dir=False):
+    # type: (str, tuple, Union[bool, str]) -> None
+    """
+    iterate through the files in a dir if they match our images,
+    make a box file for them using Tesseract.
+
+    Args:
+        root_dir (str): The path of the dir to search
+        image_exts (tuple): all valid file exts
+        output_dir (str): dir to place our outputted box files,
+                          if False, will use the root_dir
+
+    """
+
     # we won't recursively search....yet
     for file_name in os.listdir(root_dir):
         file_ext = file_name.split(".")[-1]
@@ -29,6 +44,16 @@ def make_box_file_for_dir(root_dir, image_exts=("png", "jpg"), output_dir=False)
             subprocess.Popen(cmd)
 
 def validiate_empty_box_files(root_dir):
+    # type: (str) -> None
+    """
+    Search through and replace any empty box file with a default box file
+    will need to be manually corrected.
+
+    Args:
+        root_dir (str): Path of the dir to search
+
+    """
+
     for file_name in os.listdir(root_dir):
         file_ext = file_name.split(".")[-1]
         file_path = os.path.join(root_dir, file_name)
@@ -38,6 +63,14 @@ def validiate_empty_box_files(root_dir):
             shutil.copy(DEFAULT_BOX, file_path)
 
 def make_game_captures_box_files(override=False):
+    # type: (bool) -> None
+    """
+    Convince method for generating box files for the game captures' folder.
+
+    Args:
+        override (bool): If a .box already exists, can we override it with the one we make?
+
+    """
     for file_name in os.listdir(GAME_CAPTURES_DIR):
         file_ext = file_name.split(".")[-1]
         if file_ext in ("png", "jpg"):

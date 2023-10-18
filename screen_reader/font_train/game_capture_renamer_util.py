@@ -4,6 +4,10 @@ name_constant = "h_cure_font_train_game_capture"
 
 # run this inside the game_captures_folder.
 def rename_captures():
+	"""
+	Exists Just to rename captures and make a empty text file for them
+	"""
+
 	for index, image_file in enumerate(os.listdir(img_dir)):
 		num = str(index + 1).zfill(3)
 		file_name = f"{name_constant}_{num}"
