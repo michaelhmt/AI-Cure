@@ -4,7 +4,7 @@ import subprocess
 import pathlib
 import shutil
 import time
-from typing import Union
+from typing import Union, Generator
 
 # own modules
 from screen_reader.screen_reader_constants import TESSERACT_DEFAULT_WIN_INSTALL_PATH
@@ -86,6 +86,23 @@ def make_game_captures_box_files(override=False):
             subprocess.Popen(cmd)
             time.sleep(0.3)
     validiate_empty_box_files(GAME_CAPTURES_DIR)
+
+def file_path_generator(dir_path):
+    # type: (str) -> Generator[str, None, None]
+    """
+    convince function for iterating across a dir and
+    getting back the full file path and not the name
+
+    Args:
+        dir_path (str): path to the dir we want to iterate
+
+    """
+    if not os.path.exists(dir_path):
+        raise OSError(f"given path {dir_path} does not exist and cannot be iterated")
+    for file_name in os.listdir(dir_path):
+        full_path = os.path.join(dir_path, file_name)
+        if os.path.isfile(full_path):
+            yield full_path
 
 if __name__ == "__main__":
     make_game_captures_box_files()
