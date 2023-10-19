@@ -87,6 +87,7 @@ class FontTraining:
                   stroke_width=2, stroke_fill='black')
         image.save(image_path)
 
+    test
 
 if __name__ == "__main__":
     training_obj = FontTraining()
