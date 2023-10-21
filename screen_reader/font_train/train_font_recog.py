@@ -1,21 +1,27 @@
 # python built in
 import os
 import pathlib
+import shutil
 import subprocess
+
+# site packages
+import cv2
 
 # own modules
 from screen_reader.screen_reader_constants import TESSERACT_DEFAULT_WIN_INSTALL_PATH, \
                                                   TESSERACT_LSTMF_WIN_EXE, TESSERACT_EN_LAST_CHECKPOINT
 from screen_reader.font_train.training_utils import file_path_generator
 
-# psm 6 assume all the text data is on roughly the same line
-LSTM_CMD = '"{tes_exe}" {train_image} {lstm_output} --psm 6 lstm.train'
+# psm 6 assume all the text data is on roughly the same line psm 3 the text can be anywhere
+LSTM_CMD_PSM_6 = '"{tes_exe}" {train_image} {lstm_output} --psm 6 lstm.train'
+LSTM_CMD_PSM_3 = '"{tes_exe}" {train_image} {lstm_output} --psm 3 lstm.train'
 FINE_TUNE_CMD = 'start cmd.exe /c "{lstmf_train_exe}" ' \
                 "--model_output {output_dir} " \
                 "--traineddata {base_model} "\
                 "--train_listfile {training_list} " \
                 "--max_iterations {training_iterations} " \
                 "--continue_from {last_check}   PAUSE"
+NON_ALINGED_DATA_PREXIS = {"__none__"}
 
 class FontTrainer:
     own_dir = pathlib.Path(__file__).parent.resolve()
@@ -30,6 +36,8 @@ class FontTrainer:
         self.ready_to_train = False
         self.base_model = base_model
         self.model_dir = os.path.join(self.own_dir, "model_result")
+
+        self.staged_training_files = list()
 
         try:
             os.makedirs(self.lstmf_dir)
@@ -53,6 +61,21 @@ class FontTrainer:
         return [path for path in file_path_generator(self.t_data_root)
                 if self.is_valid_data(path)]
 
+    def move_to_staging_and_gray_scale(self):
+        staging_folder = os.path.join(self.own_dir, "data_staging")
+
+        for file_path in self.collect_training_data():
+            base_name = os.path.basename(file_path)
+            file_name = base_name.split(".")[0]
+            path_no_ext = file_path.split(".")[0]
+            box_file = f"{path_no_ext}.box"
+
+            image_copy_path = os.path.join(staging_folder, base_name)
+            shutil.copy(box_file, os.path.join(staging_folder, f"{file_name}.box"))
+            gray_image = cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2GRAY)
+            cv2.imwrite(image_copy_path, gray_image)
+
+
     def is_valid_data(self, file_path):
         # type: (str) -> bool
         """
@@ -69,12 +92,12 @@ class FontTrainer:
         path_no_ext = file_path.split(".")[0]
         ext = file_path.split(".")[1]
         box_file = f"{path_no_ext}.box"
-        txt_file = f"{path_no_ext}.txt"
+        #txt_file = f"{path_no_ext}.txt"
 
         box_exists = os.path.exists(box_file)
-        txt_exists = os.path.exists(txt_file)
+        #txt_exists = os.path.exists(txt_file)
         ext_is_valid = ext in self.training_exts
-        if box_exists and txt_exists and ext_is_valid:
+        if box_exists and ext_is_valid:
             return True
         else:
             return False
@@ -90,9 +113,14 @@ class FontTrainer:
         for training_image_path in self.training_data:
             image_name = os.path.basename(training_image_path).split(".")[0]
             lstmf_file_path = os.path.join(self.lstmf_dir, image_name)
-            cmd = LSTM_CMD.format(tes_exe=TESSERACT_DEFAULT_WIN_INSTALL_PATH,
-                                  train_image=training_image_path,
-                                  lstm_output=lstmf_file_path)
+            if any([True for prexs in NON_ALINGED_DATA_PREXIS if prexs in image_name]):
+                cmd_template = LSTM_CMD_PSM_3
+            else:
+                cmd_template = LSTM_CMD_PSM_6
+
+            cmd = cmd_template.format(tes_exe=TESSERACT_DEFAULT_WIN_INSTALL_PATH,
+                                      train_image=training_image_path,
+                                      lstm_output=lstmf_file_path)
             lstmf_file_list.append(f"{lstmf_file_path}.lstmf")
             print(f"Running lstmf command for {image_name} cmd is: {cmd}")
             subprocess.call(cmd)
@@ -146,4 +174,5 @@ if __name__ == "__main__":
     base_model = os.path.join(current_dir, "base_model/eng.traineddata")
 
     trainer = FontTrainer(training_data_dir, base_model)
-    trainer.train()
+    #trainer.make_lstmf_files()
+    trainer.train(steps=8000)

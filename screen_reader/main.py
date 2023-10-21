@@ -58,6 +58,7 @@ class ScreenReaderBase():
             image_analysis[roi_name] = self.check_roi(roi_coords, debug_show=True)
 
         print(f"analysis of {os.path.basename(image_path)}: {image_analysis}")
+        return image_analysis
 
 
     def check_roi(self, roi_coords, debug_show=False):

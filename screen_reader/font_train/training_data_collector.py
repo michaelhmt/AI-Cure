@@ -12,11 +12,14 @@ import keyboard
 import screen_reader.font_train.training_utils as training_utils
 
 TIME_COORDS = {"x": 1224, "y":426, "width": 110, "height": 35}
+LVL_COORDS_UP = {"x": 701, "y":554, "width": 313, "height": 382}
+LVL = {"x": 1809, "y":374, "width": 100, "height": 33}
+EUIP_COORDS = {"x": 1224, "y":426, "width": 110, "height": 35}
 
 class Collector:
     own_path = pathlib.Path(__file__).parent.resolve()
 
-    def __init__(self, coords, training_data_name, default_box_file=None):
+    def __init__(self, coords, training_data_name, default_box_file=None, ):
         self.target = coords
         self.data_name = training_data_name
         self.default_box = default_box_file
@@ -25,31 +28,42 @@ class Collector:
         if not os.path.exists(self.output_path_dir):
             os.makedirs(self.output_path_dir)
 
+    def capture_one(self, prefix_name=None, overwrite=True):
+        prefix = prefix_name or "screenshot_capture"
+
+        image_number = 0
+        while True:
+            screenshot_output = os.path.join(self.output_path_dir, f"{prefix}_{str(image_number).zfill(3)}.png")
+            if os.path.exists(screenshot_output) and not overwrite:
+                image_number += 1
+                continue
+            else:
+                break
+        self.capture_image(screenshot_output)
+
+    def capture_image(self, output_path):
+        region = (self.target["x"], self.target["y"],
+                  self.target["width"], self.target["height"])
+
+        print("Took screenshot")
+        screen_shot = pyautogui.screenshot(region=region)
+        screen_shot.save(output_path)
+        if self.default_box:
+            box_path = output_path.split(".")[0] + ".box"
+            shutil.copy(self.default_box, box_path)
+
     def capture_data(self, delay_time=2, prefix_name=None, overwrite=False):
 
         counter = 0
 
         while True:
-            if keyboard.is_pressed("q"):
-                print("exiting capture")
-                break
-
-            region = (self.target["x"], self.target["y"],
-                      self.target["width"], self.target["height"])
-
             print("Took screenshot")
-            screen_shot = pyautogui.screenshot(region=region)
 
             prefix = prefix_name or "screenshot_capture"
             screenshot_output = os.path.join(self.output_path_dir, f"{prefix}_{counter}.png")
             if os.path.exists(screenshot_output) and not overwrite:
-                counter += 1
                 continue
-
-            screen_shot.save(screenshot_output)
-            if self.default_box:
-                box_path = screenshot_output.split(".")[0] + ".box"
-                shutil.copy(self.default_box, box_path)
+            self.capture_image(screenshot_output)
 
             counter += 1
 
@@ -64,7 +78,7 @@ class Collector:
 
 
 if __name__ == "__main__":
-    data_collector = Collector(TIME_COORDS, "hcure_time_counter",
-                               default_box_file="E:\\Python\\Ai_Knight\\screen_reader\\font_train\\data_capture\\default_time_Box.box")
-    data_collector.capture_data(delay_time=6)
-    #data_collector.make_box_files()
+    #default_box_file="E:\\Python\\Ai_Knight\\screen_reader\\font_train\\data_capture\\hcure_level_up\\back-up\\default_box.box"
+    data_collector = Collector(LVL, "misc_training")
+    #data_collector.capture_one(prefix_name="hcure_level_number", overwrite=False)
+    data_collector.make_box_files()

@@ -35,7 +35,8 @@ class FontTester():
     def test_data(self):
         results = list()
         for test_file in self.test_files:
-            image =cv2.cvtColor(cv2.imread(test_file), cv2.COLOR_BGR2GRAY)
+            image =cv2.cvtColor(cv2.imread(test_file), cv2.IMREAD_COLOR)
+            #thresh = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
             text = pytesseract.image_to_string(image, lang=self.model_name,
                                                config=f"--tessdata-dir {self.model_data_dir}")
             text = text.replace("\n", "")
@@ -61,7 +62,7 @@ class FontTester():
               f"fail rate is {len(failed) / len(results) *100}%")
 
 if __name__ == "__main__":
-    tester = FontTester(os.path.join(pathlib.Path(__file__).parent.resolve(), "trained_model/hcure_font_model_1"))
+    tester = FontTester(os.path.join(pathlib.Path(__file__).parent.resolve(), "trained_model/hcure_font_model_3"))
     tester.test_data()
 
 # HCure Time coords (on my screen)
