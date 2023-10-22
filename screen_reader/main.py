@@ -8,17 +8,23 @@ import pytesseract
 
 # own modules
 import screen_reader_constants
-
+from screen_reader.font_train.training_utils import file_path_generator
+from screen_reader.font_train.training_utils import str_is_similar
 
 class ScreenReaderBase():
     """
     Class for read test of an image
     """
 
-    def __init__(self):
+    def __init__(self, vision_model=None):
         self.image = None
         tessract_install_path = screen_reader_constants.TESSERACT_DEFAULT_WIN_INSTALL_PATH
         pytesseract.pytesseract.tesseract_cmd = tessract_install_path
+        self.model = None
+        self.model_dir = None
+        if vision_model:
+            self.model = vision_model.replace("\\", "/")
+            self.model_dir = os.path.dirname(self.model)
 
 
     def load_image(self, image_path):
@@ -82,7 +88,7 @@ class ScreenReaderBase():
             plt.imshow(roi, cmap='gray', interpolation='bicubic')
             plt.show()
 
-        collected_str = pytesseract.image_to_string(roi, config='--psm 12')
+        collected_str = pytesseract.image_to_string(roi, config='--psm 6')
         print(f"found this string {collected_str}")
         return collected_str
 

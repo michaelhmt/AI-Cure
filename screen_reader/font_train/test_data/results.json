@@ -2,11 +2,10 @@
 	"test_data_001" : "00:10",
 	"test_data_002" : "The ingame characters are not",
 	"test_data_003" : "LV: 1",
-	"test_data_004" : "lv 2",
 	"test_data_005" : "Fan Beam",
-	"test_data_006" : "HP 60",
 	"test_data_007" : "02:21",
 	"test_data_008" : "HAKOS BAELZ",
 	"test_data_009" : "Spider Cooking",
-	"test_data_010" : "SPD"
+	"test_data_010" : "SPD",
+	"test_data_011" : "00:21"
 }

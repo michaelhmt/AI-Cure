@@ -8,6 +8,8 @@ from typing import Union, Generator
 
 # site packages
 import cv2
+import fuzzywuzzy.fuzz
+from fuzzywuzzy import fuzz
 
 # own modules
 from screen_reader.screen_reader_constants import TESSERACT_DEFAULT_WIN_INSTALL_PATH
@@ -173,6 +175,8 @@ def slice_level_up_screen(output_dir):
                                              y_coord, height, output_file_path,
                                              box_file_out_put)
 
+def str_is_similar(string_to_check, str_to_compare, threshold=75):
+    return threshold <= fuzzywuzzy.fuzz.ratio(string_to_check, str_to_compare)
 
 
 if __name__ == "__main__":

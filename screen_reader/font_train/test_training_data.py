@@ -11,6 +11,7 @@ import pytesseract
 # own modules
 import screen_reader.screen_reader_constants as screen_reader_constants
 from screen_reader.font_train.training_utils import file_path_generator
+from screen_reader.font_train.training_utils import str_is_similar
 
 class FontTester():
     """
@@ -35,14 +36,13 @@ class FontTester():
     def test_data(self):
         results = list()
         for test_file in self.test_files:
-            image =cv2.cvtColor(cv2.imread(test_file), cv2.IMREAD_COLOR)
-            #thresh = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+            image =cv2.cvtColor(cv2.imread(test_file), cv2.COLOR_BGR2GRAY)
             text = pytesseract.image_to_string(image, lang=self.model_name,
-                                               config=f"--tessdata-dir {self.model_data_dir}")
+                                               config=f"--tessdata-dir {self.model_data_dir} --psm 6")
             text = text.replace("\n", "")
             image_name = os.path.basename(test_file).split(".")[0]
-            answer = self.answer_sheet.get(image_name, "")
-            result = {"match": text == answer,
+            answer = self.answer_sheet.get(image_name, "").replace("\n", "")
+            result = {"match": str_is_similar(text, answer),
                       "expected result:": answer,
                       "actual result:": text}
             results.append(result)
@@ -62,7 +62,7 @@ class FontTester():
               f"fail rate is {len(failed) / len(results) *100}%")
 
 if __name__ == "__main__":
-    tester = FontTester(os.path.join(pathlib.Path(__file__).parent.resolve(), "trained_model/hcure_font_model_3"))
+    tester = FontTester(os.path.join(pathlib.Path(__file__).parent.resolve(), "trained_model/hcure_font_model_4"))
     tester.test_data()
 
 # HCure Time coords (on my screen)

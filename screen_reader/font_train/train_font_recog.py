@@ -63,6 +63,7 @@ class FontTrainer:
 
     def move_to_staging_and_gray_scale(self):
         staging_folder = os.path.join(self.own_dir, "data_staging")
+        self.staged_training_files = list()
 
         for file_path in self.collect_training_data():
             base_name = os.path.basename(file_path)
@@ -74,6 +75,7 @@ class FontTrainer:
             shutil.copy(box_file, os.path.join(staging_folder, f"{file_name}.box"))
             gray_image = cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2GRAY)
             cv2.imwrite(image_copy_path, gray_image)
+            self.staged_training_files.append(image_copy_path)
 
 
     def is_valid_data(self, file_path):
@@ -110,7 +112,7 @@ class FontTrainer:
         """
 
         lstmf_file_list = list()
-        for training_image_path in self.training_data:
+        for training_image_path in self.staged_training_files:
             image_name = os.path.basename(training_image_path).split(".")[0]
             lstmf_file_path = os.path.join(self.lstmf_dir, image_name)
             if any([True for prexs in NON_ALINGED_DATA_PREXIS if prexs in image_name]):
@@ -164,6 +166,7 @@ class FontTrainer:
 
     def train(self, steps=4000):
         # make and collect lstmf files for training
+        self.move_to_staging_and_gray_scale()
         self.make_lstmf_files()
         self.ready_to_train = True
         self.fine_tune_training(steps=steps)
@@ -174,5 +177,5 @@ if __name__ == "__main__":
     base_model = os.path.join(current_dir, "base_model/eng.traineddata")
 
     trainer = FontTrainer(training_data_dir, base_model)
-    #trainer.make_lstmf_files()
-    trainer.train(steps=8000)
+    trainer.make_lstmf_files()
+    trainer.train(steps=7000)
