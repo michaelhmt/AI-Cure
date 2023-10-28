@@ -175,7 +175,23 @@ def slice_level_up_screen(output_dir):
                                              y_coord, height, output_file_path,
                                              box_file_out_put)
 
-def str_is_similar(string_to_check, str_to_compare, threshold=75):
+
+def dynamic_threshold(string_length):
+    """Calculate dynamic threshold based on string length."""
+
+    min_threshold = 65
+    max_threshold = 85
+
+    # Linear interpolation between min and max thresholds
+    # This will start at min_threshold for string_length = 1
+    # and gradually increase to max_threshold as string_length increases
+    threshold = min_threshold + (max_threshold - min_threshold) * (string_length - 1) / 100
+    return min(max_threshold, threshold)
+
+
+def str_is_similar(string_to_check, str_to_compare, threshold=None):
+    if not threshold:
+        threshold = dynamic_threshold(min(len(string_to_check), len(str_to_compare)))
     return threshold <= fuzzywuzzy.fuzz.ratio(string_to_check, str_to_compare)
 
 
