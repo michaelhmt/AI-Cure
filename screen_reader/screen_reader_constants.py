@@ -14,9 +14,9 @@ STATE_CHECK_RESULTS_STR = "expected_value"
 
 # assuming game is at 720p
 # in game screen coords
-ENEMIES_KILLED = {"start_x": 1024, "start_y": 64, "end_x": 1085, "end_y": 99}
-LVL = {"start_x": 1217, "start_y": 8, "end_x": 1262, "end_y": 32}
-TIME = {"start_x": 590, "start_y": 57, "end_x": 691, "end_y": 87}
+ENEMIES_KILLED = {"start_x": 1028, "start_y": 101, "end_x": 1088, "end_y": 127}
+LVL = {"start_x": 1224, "start_y": 39, "end_x": 1287, "end_y": 66}
+TIME = {"start_x": 601, "start_y": 89, "end_x": 693, "end_y": 114}
 LVL_TEXT = {"start_x": 1182, "start_y": 36, "end_x": 1221, "end_y": 68, STATE_CHECK_RESULTS_STR: "LV:"}
 
 # pause screen coords

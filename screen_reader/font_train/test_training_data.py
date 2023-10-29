@@ -62,7 +62,7 @@ class FontTester():
               f"fail rate is {len(failed) / len(results) *100}%")
 
 if __name__ == "__main__":
-    tester = FontTester(os.path.join(pathlib.Path(__file__).parent.resolve(), "trained_model/hcure_font_model_4"))
+    tester = FontTester(os.path.join(pathlib.Path(__file__).parent.resolve(), "trained_model/hcure_font_model_5"))
     tester.test_data()
 
 # HCure Time coords (on my screen)

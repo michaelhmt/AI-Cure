@@ -11,6 +11,7 @@ import cv2
 from screen_reader.screen_reader_constants import TESSERACT_DEFAULT_WIN_INSTALL_PATH, \
                                                   TESSERACT_LSTMF_WIN_EXE, TESSERACT_EN_LAST_CHECKPOINT
 from screen_reader.font_train.training_utils import file_path_generator
+import screen_reader.game_screen_vision.vision_utils as vision_utils
 
 # psm 6 assume all the text data is on roughly the same line psm 3 the text can be anywhere
 LSTM_CMD_PSM_6 = '"{tes_exe}" {train_image} {lstm_output} --psm 6 lstm.train'
@@ -74,6 +75,9 @@ class FontTrainer:
             image_copy_path = os.path.join(staging_folder, base_name)
             shutil.copy(box_file, os.path.join(staging_folder, f"{file_name}.box"))
             gray_image = cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2GRAY)
+            treated_image = vision_utils.mid_gray_non_white_blakcs(vision_utils.convert_cv2_to_pil(gray_image))
+            gray_image = vision_utils.convert_pil_to_cv2(treated_image)
+
             cv2.imwrite(image_copy_path, gray_image)
             self.staged_training_files.append(image_copy_path)
 
@@ -178,4 +182,4 @@ if __name__ == "__main__":
 
     trainer = FontTrainer(training_data_dir, base_model)
     trainer.make_lstmf_files()
-    trainer.train(steps=7000)
+    trainer.train(steps=1900)
