@@ -51,6 +51,9 @@ class GameVisionClass:
         self.prep_tesseract()
 
     def prep_tesseract(self):
+        """
+        Run once to set tesseract up
+        """
         tessract_install_path = screen_reader_constants.TESSERACT_DEFAULT_WIN_INSTALL_PATH
         pytesseract.pytesseract.tesseract_cmd = tessract_install_path
 
@@ -137,6 +140,13 @@ class GameVisionClass:
         return gray_image
 
     def save_to_debug_folder(self, image):
+        """
+       Saves the image to debug folder annotates with state rois and guessed values if the state has any
+
+        Args:
+            image (cv2.image): loaded cv2 image
+        """
+
         save_path = os.path.join(self.test_data_dir, f"vision_debug_image_{str(len(os.listdir(self.test_data_dir)) + 1).zfill(4)}.png")
         if self.current_state:
             for roi_name, roi_coords in self.states[self.current_state]:
@@ -147,7 +157,7 @@ class GameVisionClass:
                 cv2.putText(image,
                             f"{roi_name}:  {self.check_roi(roi_coords, image)}",
                             (roi_coords['start_x'], roi_coords['start_y'] - 18),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
+                            cv2.FONT_HERSHEY_PLAIN, 1.1, (0, 0, 255), 2, cv2.LINE_AA)
         cv2.imwrite(save_path, image)
 
     def add_states(self, states):
@@ -184,6 +194,10 @@ class GameVisionClass:
         return collected_str
 
     def find_current_state(self):
+        """
+        Loops through the currently loaded states and determines which one if any is currently active.
+        """
+
         results = dict()
         current_screen = self.capture_window()
         for state in self.states.values(): # type: GameState
@@ -206,6 +220,9 @@ class GameVisionClass:
                     print("cannot determine game state")
 
     def get_current_state_info(self):
+        """
+        If a state is currently set will loop through the state rois and report the value of each one.
+        """
         if not self.current_state:
             print("No current state set, skipping")
             return
@@ -234,6 +251,7 @@ if __name__ == "__main__":
     count = 0
     while True:
         if count > 8:
+            count = 0
             print("checking state")
             vision.find_current_state()
         else:

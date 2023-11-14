@@ -1,0 +1,9 @@
+
+game_settings:
+  game_exe_path: "my/path/to_exe.exe"
+  max_time_min: 120
+
+training_settings:
+  actions_per_second: 4
+  max_steps: 2000
+  output_dir: None # will default to project output dir

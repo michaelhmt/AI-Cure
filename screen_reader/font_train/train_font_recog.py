@@ -182,4 +182,4 @@ if __name__ == "__main__":
 
     trainer = FontTrainer(training_data_dir, base_model)
     trainer.make_lstmf_files()
-    trainer.train(steps=1900)
+    trainer.train(steps=3500)
