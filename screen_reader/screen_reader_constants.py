@@ -29,12 +29,23 @@ SELECTED_NAME = {"start_x": 45, "start_y": 445, "end_x": 309, "end_y": 477}
 # main menu
 PLAY_BUTTON = {"start_x": 1011, "start_y": 249, "end_x": 1119, "end_y": 286, STATE_CHECK_RESULTS_STR: "Play"}
 
-GAME_ROIS = {"killed": ENEMIES_KILLED,
-             "lvl": LVL,
-             "time": TIME,
+ENEMIES_KILLED_KEY = "killed"
+LVL_KEY = "lvl"
+TIME_KEY = "time"
+SELECTED_CHAR_KEY = "selected"
+
+# keys
+GAME_KEYS = (ENEMIES_KILLED_KEY, LVL_KEY, TIME_KEY)
+CHAR_SELECT_KEYS = (SELECTED_CHAR_KEY,)
+ALL_KEYS = (ENEMIES_KILLED_KEY, LVL_KEY, TIME_KEY, SELECTED_CHAR_KEY)
+
+# state infos
+GAME_ROIS = {ENEMIES_KILLED_KEY: ENEMIES_KILLED,
+             LVL_KEY: LVL,
+             TIME_KEY: TIME,
              STATE_CHECK_ROI_KEY: LVL_TEXT}
 MAIN_MENU_ROIS = {STATE_CHECK_ROI_KEY: PLAY_BUTTON}
-CHAR_SELECT_RIOS = {"selected": SELECTED_NAME,
+CHAR_SELECT_RIOS = {SELECTED_CHAR_KEY: SELECTED_NAME,
                     STATE_CHECK_ROI_KEY: SCREEN_HEADER}
 
 HCURE_ROIS = {"game_screen": GAME_ROIS, "main_menu": MAIN_MENU_ROIS, "char_select": CHAR_SELECT_RIOS}

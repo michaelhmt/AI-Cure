@@ -85,8 +85,9 @@ class GameVisionClass:
 
         win32gui.EnumWindows(callback, [self.proc_id])
 
-    def capture_window(self):
-        # type: () -> Image
+    def get_window_array(self):
+        # type: () -> numpy.ndarray
+
         """
         Captures the active window of our given process
 
@@ -119,10 +120,23 @@ class GameVisionClass:
 
         # Create a numpy array from the raw string
         image_np = numpy.frombuffer(bmpstr, dtype=numpy.uint8)
+        image_np = image_np.reshape((bmpinfo['bmHeight'], bmpinfo['bmWidth'], 4))
+
+        # Free up the device contexts and bitmap objects
+        srcdc.DeleteDC()
+        memdc.DeleteDC()
+        win32gui.ReleaseDC(self.matched_handler, hwindc)
+        win32gui.DeleteObject(bmp.GetHandle())
+
+        return image_np
+
+
+    def capture_window(self):
+        # type: () -> Image
 
         # Reshape the numpy array to match the image dimensions.
         # The 'BGRX' suggests the image is 4-channel with the last being ignored.
-        image_np = image_np.reshape((bmpinfo['bmHeight'], bmpinfo['bmWidth'], 4))
+        image_np = self.get_window_array()
 
         # Drop the fourth channel (X) and convert to grayscale using OpenCV
         opencv_image_gray = cv2.cvtColor(image_np[:, :, :3], cv2.COLOR_BGR2GRAY)
@@ -131,13 +145,13 @@ class GameVisionClass:
 
         if self.testing:
             self.save_to_debug_folder(gray_image)
-
-        # Free up the device contexts and bitmap objects
-        srcdc.DeleteDC()
-        memdc.DeleteDC()
-        win32gui.ReleaseDC(self.matched_handler, hwindc)
-        win32gui.DeleteObject(bmp.GetHandle())
         return gray_image
+
+    def get_window_size(self):
+        window_array = self.get_window_array()
+        shape = window_array.shape
+        return shape[0], shape[1]
+
 
     def save_to_debug_folder(self, image):
         """

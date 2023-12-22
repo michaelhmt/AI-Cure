@@ -1,9 +1,28 @@
 
 game_settings:
-  game_exe_path: "my/path/to_exe.exe"
+  game_exe_path: "E:\\holocure\\Game_depolyment\\HoloCure.exe"
   max_time_min: 120
 
 training_settings:
   actions_per_second: 4
-  max_steps: 2000
-  output_dir: None # will default to project output dir
+  max_steps: 60000
+  #output_dir: None # will default to project output dir
+  run_steps: 512
+  runs_per_update: 3
+  updates_per_checkpoint: 4
+  learn_steps: 40
+
+vision_settings:
+  model_path: "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\hcure_font_model_5.traineddata"
+  start_up_time: 15
+
+inputs:
+  move_left: "a"
+  move_right: "d"
+  move_down: "s"
+  move_up: "w"
+  proceed: "enter"
+  exit: "esc"
+
+
+

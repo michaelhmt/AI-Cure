@@ -1,0 +1,104 @@
+# python built in
+import subprocess
+import time
+import os
+import uuid
+import pathlib
+import datetime
+
+# project modules
+from config.base_config import BaseConfig
+from gym.base_gym import BaseEnv
+from screen_reader.game_screen_vision.vision_class import GameVisionClass
+from name_gen.run_name_gen import get_random_name
+
+# Site Packages
+from stable_baselines3 import A2C, PPO
+from stable_baselines3.common import env_checker
+
+
+class BaseApp:
+    own_path = pathlib.Path(__file__).parent.resolve()
+    own_app_dir = os.path.join(own_path, "test_data")
+
+
+    def __init__(self, app_name: str, config: BaseConfig, env, check_env=False):
+        # main vars
+        self._name = app_name
+        self._config = config
+        self.env_constructor = env # is the function NOT the instance
+        self.check_env = check_env
+
+        # name setting vars
+        current_datetime = datetime.datetime.now()
+        self.start_time_str = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
+        self.model_name = get_random_name()
+
+        # vision_vars
+        self.vision_class = None
+        self.target_exe_path = self._config.get_exe_path()
+        self.vision_model_path = self._config.get_vision_model_path()
+        self.start_up_delay = self._config.get_start_up_time()
+
+        # model saving
+        self._model = None
+        self.model_out_put_dir = None
+
+        # training settings
+        self.run_steps = self._config.get_run_steps()
+        self.runs_per_update = self._config.get_runs_per_update()
+        self.updates_per_checkpoint = self._config.get_updates_per_checkpoint()
+        self.learning_steps = self._config.get_learn_steps()
+
+        # app settings
+        self.app_proc = None
+        self.proc_id = None
+
+        # start up functions
+        self.activate_vision()
+        self.find_save_paths()
+
+
+        self._env = self.env_constructor(self.vision_class, self.config)
+        if self.check_env:
+            env_checker.check_env(self._env)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def config(self):
+        return self._config
+
+    @property
+    def env(self):
+        return self._env
+
+    def activate_vision(self):
+        self.app_proc = subprocess.Popen(self.target_exe_path)
+        time.sleep(self.start_up_delay)
+        self.proc_id = self.app_proc.pid
+
+        self.vision_class = GameVisionClass(self.proc_id, self.vision_model_path)
+
+    def find_save_paths(self):
+        user_set_output_path = self._config.get_output_path()
+        if user_set_output_path:
+            app_folder_path = user_set_output_path
+        else:
+            app_folder_path = os.path.join(self.own_app_dir, self.name)
+
+        model_folder_name = f"{self.model_name}_{self.start_time_str}"
+        self.model_out_put_dir = os.path.join(app_folder_path, model_folder_name)
+
+    def run_training(self):
+        self._model = PPO('CnnPolicy', self.env, verbose=1, n_steps=self.run_steps * self.runs_per_update,
+                          batch_size=128, n_epochs=3, gamma=0.98)
+
+        for learning_step in range(self.learning_steps):
+            self._model.learn(total_timesteps=self.run_steps * self.runs_per_update*self.updates_per_checkpoint)
+            checkpoint_save_path = os.path.join(self.model_out_put_dir, f"{self.model_name}_chkpt_{learning_step}")
+            self._model.save(checkpoint_save_path)
+
+
