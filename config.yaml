@@ -13,7 +13,7 @@ training_settings:
   learn_steps: 40
 
 vision_settings:
-  model_path: "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\hcure_font_model_5.traineddata"
+  model_path: "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\hcure_font_model_6.traineddata"
   start_up_time: 15
 
 inputs:

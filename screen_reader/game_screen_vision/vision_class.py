@@ -245,14 +245,13 @@ class GameVisionClass:
         current_frame = self.capture_window()
         for roi_name, roi_coords in self.states[self.current_state]:
             state_report[roi_name] = self.check_roi(roi_coords, current_frame)
-        print(f"This is the current_state: {state_report}")
 
 
 
 
 if __name__ == "__main__":
     my_h_cure_exe_path = "E:\\holocure\\Game_depolyment\\HoloCure.exe"
-    vision_model_path = "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\hcure_font_model_5.traineddata"
+    vision_model_path = "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\hcure_font_model_6.traineddata"
     proc = subprocess.Popen(my_h_cure_exe_path)
     time.sleep(15)  # allow the proc to start
     proc_id = proc.pid

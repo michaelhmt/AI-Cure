@@ -79,6 +79,6 @@ class Collector:
 
 if __name__ == "__main__":
     #default_box_file="E:\\Python\\Ai_Knight\\screen_reader\\font_train\\data_capture\\hcure_level_up\\back-up\\default_box.box"
-    data_collector = Collector(LVL, "misc_training")
+    data_collector = Collector(TIME_COORDS, "hcure_time_counter_set_02")
     #data_collector.capture_one(prefix_name="hcure_level_number", overwrite=False)
     data_collector.make_box_files()

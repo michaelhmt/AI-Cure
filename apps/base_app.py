@@ -22,7 +22,7 @@ class BaseApp:
     own_app_dir = os.path.join(own_path, "test_data")
 
 
-    def __init__(self, app_name: str, config: BaseConfig, env, check_env=False):
+    def __init__(self, app_name: str, config: BaseConfig, env, check_env=False, app_proc=None):
         # main vars
         self._name = app_name
         self._config = config
@@ -51,7 +51,7 @@ class BaseApp:
         self.learning_steps = self._config.get_learn_steps()
 
         # app settings
-        self.app_proc = None
+        self.app_proc = app_proc
         self.proc_id = None
 
         # start up functions
@@ -76,10 +76,11 @@ class BaseApp:
         return self._env
 
     def activate_vision(self):
-        self.app_proc = subprocess.Popen(self.target_exe_path)
-        time.sleep(self.start_up_delay)
-        self.proc_id = self.app_proc.pid
+        if not self.app_proc:
+            self.app_proc = subprocess.Popen(self.target_exe_path)
+            time.sleep(self.start_up_delay)
 
+        self.proc_id = self.app_proc.pid
         self.vision_class = GameVisionClass(self.proc_id, self.vision_model_path)
 
     def find_save_paths(self):
@@ -90,7 +91,9 @@ class BaseApp:
             app_folder_path = os.path.join(self.own_app_dir, self.name)
 
         model_folder_name = f"{self.model_name}_{self.start_time_str}"
-        self.model_out_put_dir = os.path.join(app_folder_path, model_folder_name)
+        output_dir = os.path.join(app_folder_path, model_folder_name)
+        os.makedirs(output_dir)
+        self.model_out_put_dir = output_dir
 
     def run_training(self):
         self._model = PPO('CnnPolicy', self.env, verbose=1, n_steps=self.run_steps * self.runs_per_update,

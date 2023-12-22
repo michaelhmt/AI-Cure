@@ -168,7 +168,7 @@ class FontTrainer:
         print(f"running {cmd}")
         subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
-    def train(self, steps=4000):
+    def train(self, steps=1500):
         # make and collect lstmf files for training
         self.move_to_staging_and_gray_scale()
         self.make_lstmf_files()
@@ -182,4 +182,4 @@ if __name__ == "__main__":
 
     trainer = FontTrainer(training_data_dir, base_model)
     trainer.make_lstmf_files()
-    trainer.train(steps=3500)
+    trainer.train(steps=1300)
