@@ -15,13 +15,14 @@ from fuzzywuzzy import fuzz
 from screen_reader.screen_reader_constants import TESSERACT_DEFAULT_WIN_INSTALL_PATH
 
 BOX_CMD = "{tes_exe} {image_path} {box_path} batch.nochop makebox"
+BOX_CMD_CUSTOM = "TESSDATA_PREFIX={custom_model_path} {tes_exe} {image_path} {box_path} batch.nochop makebox -l {custom_model_name}"
 DEFAULT_BOX = os.path.join(pathlib.Path(__file__).parent.resolve(), "default_box.box")
 GAME_CAPTURES_DIR = os.path.join(pathlib.Path(__file__).parent.resolve(), "game_captures")
 
 LEVEL_UP_Y_LINE_COORDS = (362, 286, 235, 196, 154, 115, 75, 35)
 BIG_LINE_Y_COORDS = (362,)
 
-def make_box_file_for_dir(root_dir, image_exts=("png", "jpg"), output_dir=False):
+def make_box_file_for_dir(root_dir, image_exts=("png", "jpg"), output_dir=False, custom=None):
     # type: (str, tuple, Union[bool, str]) -> None
     """
     iterate through the files in a dir if they match our images,
@@ -45,9 +46,19 @@ def make_box_file_for_dir(root_dir, image_exts=("png", "jpg"), output_dir=False)
             image_name = file_name.split(".")[0]
             box_output = os.path.join(output_dir, image_name)
 
-            cmd = BOX_CMD.format(tes_exe=TESSERACT_DEFAULT_WIN_INSTALL_PATH,
-                                 image_path=os.path.join(root_dir, file_name),
-                                 box_path=box_output)
+            if custom:
+                model_dir = os.path.dirname(custom)
+                model_name = os.path.basename(custom).split(".")[0]
+                cmd = BOX_CMD.format(tes_exe=TESSERACT_DEFAULT_WIN_INSTALL_PATH,
+                                     image_path=os.path.join(root_dir, file_name),
+                                     box_path=box_output,
+                                     custom_model_path=model_dir,
+                                     custom_model_name=model_name)
+            else:
+                cmd = BOX_CMD.format(tes_exe=TESSERACT_DEFAULT_WIN_INSTALL_PATH,
+                                     image_path=os.path.join(root_dir, file_name),
+                                     box_path=box_output)
+
             subprocess.Popen(cmd)
 
 def validiate_empty_box_files(root_dir):

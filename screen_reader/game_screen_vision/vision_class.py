@@ -14,10 +14,10 @@ import win32con
 import win32ui
 import cv2
 import pytesseract
-from PIL import Image, ImageOps
+from PIL import Image
 
 # own modules
-from screen_reader.game_screen_vision.state_object import GameState
+from screen_reader.game_screen_vision.state_object import GameVisualState
 import screen_reader.screen_reader_constants as screen_reader_constants
 from screen_reader.game_screen_vision.vision_utils import make_hcure_game_states
 from screen_reader.font_train.training_utils import str_is_similar
@@ -175,7 +175,7 @@ class GameVisionClass:
         cv2.imwrite(save_path, image)
 
     def add_states(self, states):
-        # type: (list[GameState]) -> None
+        # type: (list[GameVisualState]) -> None
         for state in states:
             self.states[state.name] = state
 
@@ -214,7 +214,7 @@ class GameVisionClass:
 
         results = dict()
         current_screen = self.capture_window()
-        for state in self.states.values(): # type: GameState
+        for state in self.states.values(): # type: GameVisualState
             test_roi, expected_result = state.state_check()
             result_str = self.check_roi(test_roi, current_screen)
 

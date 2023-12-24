@@ -1,0 +1,149 @@
+# python built in
+import subprocess
+import time
+import os
+import numpy
+import pathlib
+
+
+# site packages
+import win32gui
+import win32process
+import psutil
+import win32con
+import win32ui
+import cv2
+import pytesseract
+from PIL import Image
+
+# own modules
+from states.state_object import BaseGameState
+from screen_reader.game_screen_vision.state_object import GameState as VisualGameState
+from memory_reader.game_state import MemoryGameState
+
+from screen_reader.game_screen_vision.vision_class import GameVisionClass
+from memory_reader.GameMemoryClass import GameMemoryClass
+
+import screen_reader.screen_reader_constants as screen_reader_constants
+from screen_reader.game_screen_vision.vision_utils import make_hcure_game_states
+from screen_reader.font_train.training_utils import str_is_similar
+import screen_reader.game_screen_vision.vision_utils as vision_utils
+
+
+
+class BaseGameInterface:
+
+    def __init__(self, game_exe_proc_id, game_states, parent_id_search=True):
+        self._current_state = None
+        self._states = game_states
+
+        # get the handler of the exe id
+        self.matched_handler = None
+        self.get_exe_handle(parent_id_search)
+
+    def get_exe_handle(self, search_parent_procs=True):
+        # type: (bool) -> None
+        """
+        Find the handler ID associated with our target process ID and update class attribute
+
+        Args:
+            search_parent_procs (bool): should we check the parent process
+            to see if that spawned the currently selected proc
+
+        """
+
+        def callback(hwnd, target_process_ids):
+            if win32gui.IsWindowVisible(hwnd) and win32gui.IsWindowEnabled(hwnd):
+                _, found_proc_id = win32process.GetWindowThreadProcessId(hwnd)
+                found_ids = [found_proc_id]
+                if search_parent_procs:
+                    process = psutil.Process(found_proc_id)
+                    found_ids.append(process.ppid())
+                for found_id in found_ids:
+                    if found_id in target_process_ids:
+                        self.matched_handler = hwnd
+            return True
+
+        win32gui.EnumWindows(callback, [self.proc_id])
+
+    def get_window_array(self):
+        # type: () -> numpy.ndarray
+
+        """
+        Captures the active window of our given process
+
+        Returns:
+            (Image) A Pillow image object
+
+        """
+
+        # Get the device context for the entire window
+        hwindc = win32gui.GetWindowDC(self.matched_handler)
+        left, top, right, bot = win32gui.GetWindowRect(self.matched_handler)
+        width = right - left
+        height = bot - top
+
+        # Create a device context into which we will draw the capture
+        srcdc = win32ui.CreateDCFromHandle(hwindc)
+        memdc = srcdc.CreateCompatibleDC()
+
+        # Create a blank bitmap image the same dimensions as the window
+        bmp = win32ui.CreateBitmap()
+        bmp.CreateCompatibleBitmap(srcdc, width, height)
+        memdc.SelectObject(bmp)
+
+        # BitBlt the window's contents into the bitmap's device context
+        memdc.BitBlt((0, 0), (width, height), srcdc, (0, 0), win32con.SRCCOPY)
+
+        # Convert the raw bits of the image into a format that Pillow understands
+        bmpinfo = bmp.GetInfo()
+        bmpstr = bmp.GetBitmapBits(True)
+
+        # Create a numpy array from the raw string
+        image_np = numpy.frombuffer(bmpstr, dtype=numpy.uint8)
+        image_np = image_np.reshape((bmpinfo['bmHeight'], bmpinfo['bmWidth'], 4))
+
+        # Free up the device contexts and bitmap objects
+        srcdc.DeleteDC()
+        memdc.DeleteDC()
+        win32gui.ReleaseDC(self.matched_handler, hwindc)
+        win32gui.DeleteObject(bmp.GetHandle())
+
+        return image_np
+
+    def get_window_size(self):
+        window_array = self.get_window_array()
+        shape = window_array.shape
+        return shape[0], shape[1]
+
+    def add_states(self, states):
+        # type: (list[GameState]) -> None
+        for state in states:
+            self._states[state.name] = state
+
+    def clear_states(self):
+        self._states.clear()
+
+    @property
+    def loaded_states(self):
+        return list(self._states.keys())
+
+if __name__ == "__main__":
+    from screen_reader.screen_reader_constants import HCURE_ROIS
+
+    # make visual states
+    states = list()
+    for name, roi in HCURE_ROIS.items():
+        state = VisualGameState(name, roi)
+        states.append(state)
+
+    from memory_reader.mem_addresses import IN_GAME_STATES
+
+    # make memory states
+    for name, addresses in IN_GAME_STATES.items():
+        state = MemoryGameState(name, addresses)
+        states.append(state)
+
+    print(states)
+
+

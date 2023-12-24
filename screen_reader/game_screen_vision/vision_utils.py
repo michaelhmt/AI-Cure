@@ -5,7 +5,7 @@ from PIL import Image
 
 # own modules
 from screen_reader.screen_reader_constants import HCURE_ROIS
-from screen_reader.game_screen_vision.state_object import GameState
+from screen_reader.game_screen_vision.state_object import GameVisualState
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -15,7 +15,7 @@ MID_GRAY = (128, 128, 128)
 def make_hcure_game_states():
     states = list()
     for name, roi in HCURE_ROIS.items():
-        state = GameState(name, roi)
+        state = GameVisualState(name, roi)
         states.append(state)
     return states
 

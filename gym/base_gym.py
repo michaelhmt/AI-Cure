@@ -44,7 +44,6 @@ class RewardData:
             return 0
         last_value = self.value_history[-1]
 
-        reward = 0
         if self._current_value > last_value:
             reward = self._increase_amount
         elif self._current_value < last_value:

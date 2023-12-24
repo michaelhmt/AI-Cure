@@ -53,7 +53,7 @@ class HCureEnv(BaseEnv):
     def reset(self, seed=None):
         # vision interface setup
         if self.vision_interface:
-            # we assume we have an attached app running so lets kill it
+            # we assume we have an attached app running so lets end it
             proc_id = self.vision_interface.proc_id
             process = psutil.Process(proc_id)
             process.terminate()
@@ -115,8 +115,6 @@ class HCureEnv(BaseEnv):
             return True
         else:
             return False
-
-
 
 
 if __name__ == "__main__":

@@ -72,13 +72,14 @@ class Collector:
         if not self.default_box:
             self.make_box_files()
 
-    def make_box_files(self):
-        training_utils.make_box_file_for_dir(self.output_path_dir)
+    def make_box_files(self, custom_model=None):
+        training_utils.make_box_file_for_dir(self.output_path_dir, custom=custom_model)
         training_utils.validiate_empty_box_files(self.output_path_dir)
 
 
 if __name__ == "__main__":
     #default_box_file="E:\\Python\\Ai_Knight\\screen_reader\\font_train\\data_capture\\hcure_level_up\\back-up\\default_box.box"
     data_collector = Collector(TIME_COORDS, "hcure_time_counter_set_02")
+    #data_collector.capture_data()
     #data_collector.capture_one(prefix_name="hcure_level_number", overwrite=False)
-    data_collector.make_box_files()
+    data_collector.make_box_files("E:/Python/Ai_Knight/screen_reader/font_train/trained_model/v004/hcure_font_model_4.traineddata")
