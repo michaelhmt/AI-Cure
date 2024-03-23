@@ -67,8 +67,10 @@ class HCureEnv(BaseEnv):
 
         # reset any vars we track
         self.current_step = 0
+        self.total_reward = 0.0
 
         return self.game_interface.get_window_array(), {}
+
 
     def run_step(self, action_to_take, data_tracker):
         reward = 0
@@ -128,8 +130,10 @@ class HCureEnv(BaseEnv):
             roi_reward = reward_data.get_reward_value()
             reward_data_tracking[reward_var_name] = roi_reward
             reward += roi_reward
-        reward_data_tracking["cumulative_reward"] = reward
 
+        self.total_reward += reward
+        reward_data_tracking["cumulative_reward"] = reward
+        reward_data_tracking["total_reward"] = float(self.total_reward)
         data_tracker.current_reward = reward_data_tracking
 
         print(f"Applying reward of: {reward}")

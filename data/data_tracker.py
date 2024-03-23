@@ -7,6 +7,7 @@ import msgpack_numpy as m
 
 # site packages
 import numpy as np
+from PIL import Image
 
 class StepSummary:
 
@@ -14,27 +15,27 @@ class StepSummary:
         self.step_state = None
         self.step_action = None
         self.step_reward = None
-        self._step_vision = None
+        self.step_vision = None
 
-    @property
-    def step_vision(self):
-        return self._step_vision
-
-    @step_vision.setter
-    def step_vision(self, np_array):
-        if not isinstance(np_array, np.ndarray):
-            np_array = np.array([0])
-        vision_data = {
-            "shape" : np_array.shape,
-            "dtype" : str(np_array.dtype),
-            "image_serialized": msgpack.packb(np_array, default=m.encode)
-        }
-        self._step_vision = vision_data
-
-    @step_vision.getter
-    def step_vision(self):
-        image_array = msgpack.unpackb(self._step_vision["image_serialized"], object_hook=m.decode)
-        return image_array
+    # @property
+    # def step_vision(self):
+    #     return self._step_vision
+    #
+    # @step_vision.setter
+    # def step_vision(self, np_array):
+    #     if not isinstance(np_array, np.ndarray):
+    #         np_array = np.array([0])
+    #     vision_data = {
+    #         "shape" : np_array.shape,
+    #         "dtype" : str(np_array.dtype),
+    #         "image_serialized": msgpack.packb(np_array, default=m.encode)
+    #     }
+    #     self._step_vision = vision_data
+    #
+    # @step_vision.getter
+    # def step_vision(self):
+    #     image_array = msgpack.unpackb(self._step_vision["image_serialized"], object_hook=m.decode)
+    #     return image_array
 
     def vision_serialized(self):
         return self._step_vision["image_serialized"]
@@ -91,14 +92,20 @@ class DataTracker:
     def write_data(self):
 
         master_data = list()
+        frame_folder = os.path.join(self.write_folder, f"{self.run_name}_step_frames")
+        if not os.path.exists(frame_folder):
+            os.makedirs(frame_folder)
         for index, recorded_step in enumerate(self._step_history):  # type: (int, StepSummary)
             step_number = str(index + 1).zfill(10)
+            image_save_path = os.path.join(frame_folder, f"{self.run_name}_step_{step_number}.png")
+            frame_image = Image.fromarray(recorded_step.step_vision)
+            frame_image.save(image_save_path)
             data = {
                 "step_number": step_number,
                 "state": recorded_step.step_state,
                 "action_taken": recorded_step.step_action,
-                "rewards given": recorded_step.step_reward,
-                "serlized_vision": str(recorded_step.vision_serialized())
+                "rewards_given": recorded_step.step_reward,
+                "vision_image_path": image_save_path
             }
             #print(f"Got data: {data}")
             master_data.append(data)
