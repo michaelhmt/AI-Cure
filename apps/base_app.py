@@ -10,6 +10,8 @@ import datetime
 from config.base_config import BaseConfig
 from gym.base_gym import BaseEnv
 from screen_reader.game_screen_vision.vision_class import GameVisionClass
+from game_interface.hcure_interface import HcureGameInterface
+from memory_reader.GameMemoryClass import GameMemoryClass
 from name_gen.run_name_gen import get_random_name
 
 # Site Packages
@@ -34,8 +36,8 @@ class BaseApp:
         self.start_time_str = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
         self.model_name = get_random_name()
 
-        # vision_vars
-        self.vision_class = None
+        # interface object
+        self.interface_object = None
         self.target_exe_path = self._config.get_exe_path()
         self.vision_model_path = self._config.get_vision_model_path()
         self.start_up_delay = self._config.get_start_up_time()
@@ -55,11 +57,11 @@ class BaseApp:
         self.proc_id = None
 
         # start up functions
-        self.activate_vision()
+        self.activate_interface()
         self.find_save_paths()
 
 
-        self._env = self.env_constructor(self.vision_class, self.config)
+        self._env = self.env_constructor(self.interface_object, self.config, self.model_name)
         if self.check_env:
             env_checker.check_env(self._env)
 
@@ -75,13 +77,18 @@ class BaseApp:
     def env(self):
         return self._env
 
-    def activate_vision(self):
+    def activate_interface(self):
         if not self.app_proc:
             self.app_proc = subprocess.Popen(self.target_exe_path)
             time.sleep(self.start_up_delay)
 
         self.proc_id = self.app_proc.pid
         self.vision_class = GameVisionClass(self.proc_id, self.vision_model_path)
+        self.memory_class = GameMemoryClass(self.proc_id)
+
+        self.interface_object = HcureGameInterface(self.proc_id, self.config)
+        self.interface_object.add_known_states()
+
 
     def find_save_paths(self):
         user_set_output_path = self._config.get_output_path()
@@ -103,5 +110,15 @@ class BaseApp:
             self._model.learn(total_timesteps=self.run_steps * self.runs_per_update*self.updates_per_checkpoint)
             checkpoint_save_path = os.path.join(self.model_out_put_dir, f"{self.model_name}_chkpt_{learning_step}")
             self._model.save(checkpoint_save_path)
+
+    def run_testing_interface(self):
+
+        while True:
+            current_state = self.interface_object.find_current_state()
+            current_state_name = self.interface_object.current_state.name
+            state_data = self.interface_object.get_current_state_info()
+            print(f"{'='*40}\n\n current state name object is: {current_state}\n"
+                  f"current state name is: {current_state_name}\n"
+                  f"current state info is: {state_data}")
 
 

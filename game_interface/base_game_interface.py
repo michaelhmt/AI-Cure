@@ -18,10 +18,11 @@ from PIL import Image
 
 # own modules
 from states.state_object import BaseGameState
-from screen_reader.game_screen_vision.state_object import GameState as VisualGameState
+from screen_reader.game_screen_vision.state_object import GameVisualState as VisualGameState
 from memory_reader.game_state import MemoryGameState
 
 from screen_reader.game_screen_vision.vision_class import GameVisionClass
+from screen_reader.screen_reader_constants import ScreenReadException
 from memory_reader.GameMemoryClass import GameMemoryClass
 
 import screen_reader.screen_reader_constants as screen_reader_constants
@@ -33,9 +34,14 @@ import screen_reader.game_screen_vision.vision_utils as vision_utils
 
 class BaseGameInterface:
 
-    def __init__(self, game_exe_proc_id, game_states, parent_id_search=True):
+    def __init__(self, game_exe_proc_id, config, game_states=None, parent_id_search=True):
+        self.proc_id = game_exe_proc_id
         self._current_state = None
-        self._states = game_states
+        self._states = game_states or list()
+        self._config = config
+        self._last_image = None
+
+        self.blank_state = BaseGameState("No State found", dict(), None)
 
         # get the handler of the exe id
         self.matched_handler = None
@@ -66,6 +72,12 @@ class BaseGameInterface:
 
         win32gui.EnumWindows(callback, [self.proc_id])
 
+    def get_last_image(self, clear=True):
+        last_image = self._last_image
+        if clear:
+            self._last_image = None
+        return last_image
+
     def get_window_array(self):
         # type: () -> numpy.ndarray
 
@@ -78,7 +90,10 @@ class BaseGameInterface:
         """
 
         # Get the device context for the entire window
-        hwindc = win32gui.GetWindowDC(self.matched_handler)
+        try:
+            hwindc = win32gui.GetWindowDC(self.matched_handler)
+        except Exception:
+            raise ScreenReadException("Could not find attached Window")
         left, top, right, bot = win32gui.GetWindowRect(self.matched_handler)
         width = right - left
         height = bot - top
@@ -109,6 +124,7 @@ class BaseGameInterface:
         win32gui.ReleaseDC(self.matched_handler, hwindc)
         win32gui.DeleteObject(bmp.GetHandle())
 
+        self._last_image = image_np
         return image_np
 
     def get_window_size(self):
@@ -116,32 +132,82 @@ class BaseGameInterface:
         shape = window_array.shape
         return shape[0], shape[1]
 
+    @property
+    def current_state(self):
+        if not self._current_state:
+            return self.blank_state
+        return self._current_state
+
     def add_states(self, states):
         # type: (list[GameState]) -> None
-        for state in states:
-            self._states[state.name] = state
+        self._states.extend(states)
 
     def clear_states(self):
         self._states.clear()
 
     @property
     def loaded_states(self):
-        return list(self._states.keys())
+        return [state.name for state in self._states]
+
+    def find_current_state(self):
+        """
+        Loops through the currently loaded states and determines which one if any is currently active.
+        """
+
+        for this_state in self._states: # type: BaseGameState
+            this_state_interface = this_state.interface
+            print(f"checking if we are in {this_state.name}")
+            in_this_state = this_state_interface.state_is_active(this_state)
+            if in_this_state:
+                self._current_state = this_state
+                return True
+
+    def get_current_state_info(self):
+        """
+        If a state is currently set will loop through the state rois and report the value of each one.
+        """
+        if not self._current_state:
+            print("No current state set, skipping")
+            return
+
+        state_interface = self._current_state.interface
+        state_info = state_interface.get_current_state_info(self._current_state)
+        return state_info
+
+    def add_known_states(self):
+        """
+        Implement on the specific game subclass
+
+        """
+        pass
+
 
 if __name__ == "__main__":
     from screen_reader.screen_reader_constants import HCURE_ROIS
+    import apps.hcure_utils as hcure_utils
+    import config.hcure_config as hcure_config
 
     # make visual states
     states = list()
+
+    config_path = "E:\\Python\\Ai_Knight\\config.yaml"
+    config = hcure_config.HcureConfig(config_path)
+    game_proc = hcure_utils.start_hcure(config)
+    game_interface = BaseGameInterface(game_proc)
+
+
+    vision_model = config.get_vision_model_path()
+    game_vision_interface = GameVisionClass(game_interface.get_window_array, vision_model)
     for name, roi in HCURE_ROIS.items():
-        state = VisualGameState(name, roi)
+        state = VisualGameState(name, roi, game_vision_interface)
         states.append(state)
 
     from memory_reader.mem_addresses import IN_GAME_STATES
 
+    memory_interface = GameMemoryClass()
     # make memory states
     for name, addresses in IN_GAME_STATES.items():
-        state = MemoryGameState(name, addresses)
+        state = MemoryGameState(name, addresses, memory_interface)
         states.append(state)
 
     print(states)

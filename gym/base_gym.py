@@ -1,3 +1,6 @@
+# python built in
+import threading
+import time
 
 # site packages
 from gymnasium import Env, spaces
@@ -6,7 +9,7 @@ import pydirectinput
 import numpy as np 
 
 # own modules 
-from screen_reader.game_screen_vision.vision_class import GameVisionClass
+from game_interface.base_game_interface import BaseGameInterface
 from config.base_config import BaseConfig
 
 class RewardData:
@@ -61,26 +64,31 @@ class RewardData:
 class BaseEnv(Env):
     
     def __init__(self,
-                 game_vision_interface: GameVisionClass,
-                 config: BaseConfig):
+                 game_interface: BaseGameInterface,
+                 config: BaseConfig,
+                 model_name: str):
         super(BaseEnv, self).__init__()
 
         # set up
-        self.vision_interface = game_vision_interface
+        self.game_interface = game_interface
         self.config = config
         self.current_step = 0
 
         # actions setup
         self.action_space = spaces.Discrete(len(list(self.action_map.items())))
+        self.data_tracker = None
 
         # observation setup
-        window_height, windows_width = self.vision_interface.get_window_size()
+        window_height, windows_width = self.game_interface.get_window_size()
         self.observation_space = spaces.Box(
             low=0,  # lowest colour value to read
             high=255,  # highest colour value to read
             shape=(window_height, windows_width, 4),
             dtype=np.uint8
         )
+
+        # for data tracking
+        self.model_run_name = model_name
         print("env Created")
 
     @property
@@ -93,5 +101,15 @@ class BaseEnv(Env):
     def press_key(key_name):
         print(f"Pressing: {key_name}")
         pydirectinput.press(key_name)
+
+    def hold_key(self, key_name, hold_for=1):
+        key_thread = threading.Thread(target=self.key_hold, args=(key_name, hold_for))
+        key_thread.start()
+
+    def key_hold(self, key_name, hold_for):
+        key_pressed = pydirectinput.keyDown(key_name)
+        if key_pressed:
+            time.sleep(hold_for)
+            pydirectinput.keyUp(key_name)
 
 

@@ -27,8 +27,8 @@ class GameVisionClass:
     own_path = pathlib.Path(__file__).parent.resolve()
     test_data_dir = os.path.join(own_path, "test_data")
 
-    def __init__(self, game_exe_proc_id, vision_model, parent_id_search=True):
-        self.proc_id = game_exe_proc_id
+    def __init__(self,image_method, vision_model, parent_id_search=True):
+        self.image_reterivial_method = image_method
         vision_model = vision_model.replace("\\", "/")
         self.vision_model_path = vision_model
         self.model_data_dir = str()
@@ -47,7 +47,6 @@ class GameVisionClass:
 
         # get the handler of the exe id
         self.matched_handler = None
-        self.get_exe_handle(parent_id_search)
         self.prep_tesseract()
 
     def prep_tesseract(self):
@@ -60,83 +59,13 @@ class GameVisionClass:
         self.model_data_dir = os.path.dirname(self.vision_model_path)
         self.model_name = os.path.basename(self.vision_model_path).split(".")[0]
 
-    def get_exe_handle(self, search_parent_procs=True):
-        # type: (bool) -> None
-        """
-        Find the handler ID associated with our target process ID and update class attribute
 
-        Args:
-            search_parent_procs (bool): should we check the parent process
-            to see if that spawned the currently selected proc
-
-        """
-
-        def callback(hwnd, target_process_ids):
-            if win32gui.IsWindowVisible(hwnd) and win32gui.IsWindowEnabled(hwnd):
-                _, found_proc_id = win32process.GetWindowThreadProcessId(hwnd)
-                found_ids = [found_proc_id]
-                if search_parent_procs:
-                    process = psutil.Process(found_proc_id)
-                    found_ids.append(process.ppid())
-                for found_id in found_ids:
-                    if found_id in target_process_ids:
-                        self.matched_handler = hwnd
-            return True
-
-        win32gui.EnumWindows(callback, [self.proc_id])
-
-    def get_window_array(self):
-        # type: () -> numpy.ndarray
-
-        """
-        Captures the active window of our given process
-
-        Returns:
-            (Image) A Pillow image object
-
-        """
-
-        # Get the device context for the entire window
-        hwindc = win32gui.GetWindowDC(self.matched_handler)
-        left, top, right, bot = win32gui.GetWindowRect(self.matched_handler)
-        width = right - left
-        height = bot - top
-
-        # Create a device context into which we will draw the capture
-        srcdc = win32ui.CreateDCFromHandle(hwindc)
-        memdc = srcdc.CreateCompatibleDC()
-
-        # Create a blank bitmap image the same dimensions as the window
-        bmp = win32ui.CreateBitmap()
-        bmp.CreateCompatibleBitmap(srcdc, width, height)
-        memdc.SelectObject(bmp)
-
-        # BitBlt the window's contents into the bitmap's device context
-        memdc.BitBlt((0, 0), (width, height), srcdc, (0, 0), win32con.SRCCOPY)
-
-        # Convert the raw bits of the image into a format that Pillow understands
-        bmpinfo = bmp.GetInfo()
-        bmpstr = bmp.GetBitmapBits(True)
-
-        # Create a numpy array from the raw string
-        image_np = numpy.frombuffer(bmpstr, dtype=numpy.uint8)
-        image_np = image_np.reshape((bmpinfo['bmHeight'], bmpinfo['bmWidth'], 4))
-
-        # Free up the device contexts and bitmap objects
-        srcdc.DeleteDC()
-        memdc.DeleteDC()
-        win32gui.ReleaseDC(self.matched_handler, hwindc)
-        win32gui.DeleteObject(bmp.GetHandle())
-
-        return image_np
-
-
-    def capture_window(self):
+    def capture_window(self, check_this_roi=None):
         # type: () -> Image
 
         # Reshape the numpy array to match the image dimensions.
         # The 'BGRX' suggests the image is 4-channel with the last being ignored.
-        image_np = self.get_window_array()
+        image_np = self.image_reterivial_method()
 
         # Drop the fourth channel (X) and convert to grayscale using OpenCV
         opencv_image_gray = cv2.cvtColor(image_np[:, :, :3], cv2.COLOR_BGR2GRAY)
@@ -144,16 +73,16 @@ class GameVisionClass:
         gray_image = vision_utils.convert_pil_to_cv2(treated_image)
 
         if self.testing:
-            self.save_to_debug_folder(gray_image)
+            self.save_to_debug_folder(gray_image, roi_to_write=check_this_roi)
         return gray_image
 
     def get_window_size(self):
-        window_array = self.get_window_array()
+        window_array = self.image_reterivial_method()
         shape = window_array.shape
         return shape[0], shape[1]
 
 
-    def save_to_debug_folder(self, image):
+    def save_to_debug_folder(self, image, roi_to_write=None):
         """
        Saves the image to debug folder annotates with state rois and guessed values if the state has any
 
@@ -164,27 +93,21 @@ class GameVisionClass:
         save_path = os.path.join(self.test_data_dir, f"vision_debug_image_{str(len(os.listdir(self.test_data_dir)) + 1).zfill(4)}.png")
         if self.current_state:
             for roi_name, roi_coords in self.states[self.current_state]:
-                cv2.rectangle(image,
-                              (roi_coords['start_x'], roi_coords['start_y']),
-                              (roi_coords['end_x'], roi_coords['end_y']),
-                              (0, 0, 255), 2)
-                cv2.putText(image,
-                            f"{roi_name}:  {self.check_roi(roi_coords, image)}",
-                            (roi_coords['start_x'], roi_coords['start_y'] - 18),
-                            cv2.FONT_HERSHEY_PLAIN, 1.1, (0, 0, 255), 2, cv2.LINE_AA)
+                self.draw_rio(image, roi_name, roi_coords)
+        elif roi_to_write:
+            for roi_name, roi_coords in roi_to_write.items():
+                self.draw_rio(image, roi_name, roi_coords)
         cv2.imwrite(save_path, image)
 
-    def add_states(self, states):
-        # type: (list[GameVisualState]) -> None
-        for state in states:
-            self.states[state.name] = state
-
-    def clear_states(self):
-        self.states.clear()
-
-    @property
-    def loaded_states(self):
-        return list(self.states.keys())
+    def draw_rio(self, image, roi_name, roi_coords):
+        cv2.rectangle(image,
+                      (roi_coords['start_x'], roi_coords['start_y']),
+                      (roi_coords['end_x'], roi_coords['end_y']),
+                      (0, 0, 255), 2)
+        cv2.putText(image,
+                    f"{roi_name}:  {self.check_roi(roi_coords, image)}",
+                    (roi_coords['start_x'], roi_coords['start_y'] - 18),
+                    cv2.FONT_HERSHEY_PLAIN, 1.1, (0, 0, 255), 2, cv2.LINE_AA)
 
     def check_roi(self, roi_coords, image):
         # type: (dict[str, int], Image) -> str
@@ -207,51 +130,50 @@ class GameVisionClass:
         collected_str = collected_str.replace("\n", "")
         return collected_str
 
-    def find_current_state(self):
+    def state_is_active(self, state_to_check):
         """
         Loops through the currently loaded states and determines which one if any is currently active.
         """
 
         results = dict()
-        current_screen = self.capture_window()
-        for state in self.states.values(): # type: GameVisualState
-            test_roi, expected_result = state.state_check()
-            result_str = self.check_roi(test_roi, current_screen)
 
-            result = {"expected_result": expected_result,
-                      "gathered_result": result_str,
-                      "in_this_game_state": str_is_similar(result_str, expected_result),
-                      "state_name": state.name}
-            results[state.name] = result
+        test_roi, expected_result = state_to_check.state_check()
+        current_screen = self.capture_window(check_this_roi={"State Check": test_roi})
+        result_str = self.check_roi(test_roi, current_screen)
 
-        self.current_state = None
-        for state_name, state_result in results.items():
-            if state_result['in_this_game_state']:
-                if not self.current_state:
-                    self.current_state = state_result['state_name']
-                else:
-                    self.current_state = None
-                    print("cannot determine game state")
+        in_this_state = str_is_similar(result_str, expected_result)
+        result = {"expected_result": expected_result,
+                  "gathered_result": result_str,
+                  "in_this_game_state": str_is_similar(result_str, expected_result),
+                  "state_name": state_to_check.name}
 
-    def get_current_state_info(self):
+        return in_this_state
+        # self.current_state = None
+        # for state_name, state_result in results.items():
+        #     if state_result['in_this_game_state']:
+        #         if not self.current_state:
+        #             self.current_state = state_result['state_name']
+        #         else:
+        #             self.current_state = None
+        #             print("cannot determine game state")
+
+    def get_current_state_info(self, state):
         """
         If a state is currently set will loop through the state rois and report the value of each one.
         """
-        if not self.current_state:
-            print("No current state set, skipping")
-            return
-
+        current_screen = self.capture_window()
         state_report = dict()
-        current_frame = self.capture_window()
-        for roi_name, roi_coords in self.states[self.current_state]:
-            state_report[roi_name] = self.check_roi(roi_coords, current_frame)
+        for roi_name, roi_coords in state:
+            state_report[roi_name] = self.check_roi(roi_coords, current_screen)
+
+        return state_report
 
 
 
 
 if __name__ == "__main__":
     my_h_cure_exe_path = "E:\\holocure\\Game_depolyment\\HoloCure.exe"
-    vision_model_path = "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\hcure_font_model_6.traineddata"
+    vision_model_path = "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\v004\\hcure_font_model_4.traineddata"
     proc = subprocess.Popen(my_h_cure_exe_path)
     time.sleep(15)  # allow the proc to start
     proc_id = proc.pid

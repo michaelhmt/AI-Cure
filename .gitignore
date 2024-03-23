@@ -32,6 +32,9 @@ MANIFEST
 *.manifest
 *.spec
 
+# Serlized data file with images can get pretty big 
+data/hcure/*
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

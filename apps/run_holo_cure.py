@@ -11,6 +11,7 @@ def main():
     app_proc = hcure_utils.start_hcure(config_object)
     training_app = BaseApp("Hcure", config_object, HCureEnv, app_proc=app_proc)
     training_app.run_training()
+    #training_app.run_testing_interface()
 
 if __name__ == "__main__":
     main()

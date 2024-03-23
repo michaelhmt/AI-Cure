@@ -1,6 +1,11 @@
 import pathlib
 import os
 
+
+class ScreenReadException(Exception):
+    pass
+
+
 own_path = pathlib.Path(__file__).parent.resolve()
 
 TESSERACT_DEFAULT_WIN_INSTALL_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -23,8 +28,8 @@ LVL_TEXT = {"start_x": 1182, "start_y": 36, "end_x": 1221, "end_y": 68, STATE_CH
 CHAR_NAME = {"start_x": 160, "start_y": 275, "end_x": 364, "end_y": 304}
 
 # char select coords
-SCREEN_HEADER = {"start_x": 452, "start_y": 53, "end_x": 838, "end_y": 97, STATE_CHECK_RESULTS_STR: "CHOOSE YOUR IDOL"}
-SELECTED_NAME = {"start_x": 45, "start_y": 445, "end_x": 309, "end_y": 477}
+SCREEN_HEADER = {"start_x": 452, "start_y": 53, "end_x": 838, "end_y": 97, STATE_CHECK_RESULTS_STR: "CHOOSEROPFMNAOOIL"}
+SELECTED_NAME = {"start_x": 52, "start_y": 474, "end_x": 382, "end_y": 509}
 
 # main menu
 PLAY_BUTTON = {"start_x": 1011, "start_y": 249, "end_x": 1119, "end_y": 286, STATE_CHECK_RESULTS_STR: "Play"}
@@ -48,6 +53,4 @@ MAIN_MENU_ROIS = {STATE_CHECK_ROI_KEY: PLAY_BUTTON}
 CHAR_SELECT_RIOS = {SELECTED_CHAR_KEY: SELECTED_NAME,
                     STATE_CHECK_ROI_KEY: SCREEN_HEADER}
 
-HCURE_ROIS = {"main_menu": MAIN_MENU_ROIS, "char_select": CHAR_SELECT_RIOS}
-
-
+HCURE_ROIS = {"char_select": CHAR_SELECT_RIOS}
