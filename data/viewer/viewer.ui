@@ -1024,30 +1024,7 @@ QProgressBar::chunk
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QLabel" name="imge_widget">
-          <property name="minimumSize">
-           <size>
-            <width>1296</width>
-            <height>759</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>1296</width>
-            <height>759</height>
-           </size>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::Panel</enum>
-          </property>
-          <property name="text">
-           <string>Image Here</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <layout class="QVBoxLayout" name="verticalLayout"/>
       </item>
       <item>
        <layout class="QVBoxLayout" name="value_widget_holder">

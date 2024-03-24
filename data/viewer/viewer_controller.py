@@ -8,6 +8,9 @@ import data.data_model as model
 
 # this is more of an interface
 class DataController(QObject):
+    """
+    For connecting up the data view and the data model
+    """
 
     def __init__(self):
         super().__init__()

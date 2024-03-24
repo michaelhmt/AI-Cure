@@ -26,7 +26,6 @@ class DataModel(QObject):
 
     def __init__(self):
         super().__init__()
-        self.connect_signals()
 
         # data vars
         self._loaded_data = None

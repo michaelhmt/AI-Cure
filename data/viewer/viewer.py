@@ -5,10 +5,9 @@ from typing import Union
 from data.viewer.viewer_base import Ui_MainWindow
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, Qt
-from PyQt5.QtGui import QPixmap, QPalette, QBrush
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, Qt, QMimeData
+from PyQt5.QtGui import QPixmap, QPalette, QBrush, QDragEnterEvent, QDropEvent
 from PyQt5.QtWidgets import QWidget, QLabel, QGroupBox, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy, QCheckBox
-
 class DataViewerUI(Ui_MainWindow):
 
     """
@@ -26,11 +25,24 @@ class DataViewerUI(Ui_MainWindow):
 
         # on the base window
         self.setupUi(mainwindow)
-        self.connect_signals()
 
         self.icon_folder = os.path.join(self.own_dir, "icons")
         self.label_widget = list()
         self.feature_reg = dict()
+
+        self.make_frame_viewer()
+        self.connect_signals()
+
+    def make_frame_viewer(self):
+        self.imge_widget = FrameViewer(self.centralwidget)
+        self.imge_widget.setMinimumSize(QtCore.QSize(1296, 759))
+        self.imge_widget.setMaximumSize(QtCore.QSize(1296, 759))
+        self.imge_widget.setFrameShape(QtWidgets.QFrame.Panel)
+        self.imge_widget.setObjectName("imge_widget")
+        self.verticalLayout.addWidget(self.imge_widget)
+
+        default_icon = QPixmap(self.get_label_icon("drag_on_drop_prompt_scale"))
+        self.imge_widget.setPixmap(default_icon)
 
     # for resizing the slider
     def resizeEvent(self, event):
@@ -40,6 +52,7 @@ class DataViewerUI(Ui_MainWindow):
     def connect_signals(self):
         self.action_open_data.triggered.connect(self.load_data)
         self.timeline_widget.valueChanged.connect(self.update_slider_background)
+        self.imge_widget.load_dropped_data.connect(self.load_data)
 
         # timeline buttons
         self.btn_step_forward.clicked.connect(lambda: self.timeline_widget.setValue(self.timeline_widget.value() + 1))
@@ -175,14 +188,17 @@ class DataViewerUI(Ui_MainWindow):
         self.timeline_widget.setPalette(palette)
         self.timeline_widget.setAutoFillBackground(True)
 
-    def load_data(self):
+    def load_data(self, data_path=None):
         """
         Gives the user the chance to browse for a data file
         """
         # Open a file dialog and filter for JSON files
-        options = QtWidgets.QFileDialog.Options()
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
-                                                     "JSON Files (*.json)", options=options)
+        if not data_path:
+            options = QtWidgets.QFileDialog.Options()
+            file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
+                                                         "JSON Files (*.json)", options=options)
+        else:
+            file_path = data_path
         if file_path:
             self.data_loaded.emit(file_path)
 
@@ -257,6 +273,35 @@ class ValueWidget(QWidget):
         self.icon_pixmap = self.icon_pixmap.scaled(64, Qt.KeepAspectRatio)
         self.icon.setFixedSize(self.icon_pixmap.size())
         self.icon.setPixmap(self.icon_pixmap)
+
+class FrameViewer(QLabel):
+    load_dropped_data = pyqtSignal(str)
+    def __init__(self, parent=None):
+        super(FrameViewer, self).__init__(parent)
+        # Enable the widget to accept drops
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        # Check if the event contains a MIME data of the type we accept (here, we accept any)
+        if event.mimeData().hasFormat('text/uri-list'):
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        # Extract the path of the first file from the MIME data
+        if event.mimeData().hasUrls():
+            url = event.mimeData().urls()[0]
+            file_path = url.toLocalFile()
+            if file_path.endswith(".json"):
+                print(f"using dropped data: {file_path}")
+                self.load_dropped_data.emit(file_path)
+                event.accept()
+            else:
+                print("Data ignored not json")
+                event.ignore()
+        else:
+            event.ignore()
 
 def launch_ui():
     """
