@@ -17,6 +17,7 @@ class DataViewerUI(Ui_MainWindow):
     data_loaded = pyqtSignal(str)
     new_frame_set = pyqtSignal(int)
     slider_changed = pyqtSignal(int, int, list)
+    request_poi = pyqtSignal(list, bool)
 
     own_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -57,6 +58,13 @@ class DataViewerUI(Ui_MainWindow):
         # timeline buttons
         self.btn_step_forward.clicked.connect(lambda: self.timeline_widget.setValue(self.timeline_widget.value() + 1))
         self.btn_step_back.clicked.connect(lambda: self.timeline_widget.setValue(self.timeline_widget.value() - 1))
+
+        # poi buttons
+        self.btn_step_back_to_poi.clicked.connect(lambda: self.on_request_poi(backwards=True))
+        self.btn_step_to_poi.clicked.connect(lambda: self.on_request_poi(backwards=False))
+
+    def on_request_poi(self, backwards=False):
+        self.request_poi.emit(self.get_enabled_features(), backwards)
 
     def get_enabled_features(self):
         # type: () -> list[str]
@@ -201,6 +209,9 @@ class DataViewerUI(Ui_MainWindow):
             file_path = data_path
         if file_path:
             self.data_loaded.emit(file_path)
+
+    def set_frame(self, frame_number):
+        self.timeline_widget.setValue(frame_number)
 
     def set_ui_to_data(self, frames, features, data_name):
         """

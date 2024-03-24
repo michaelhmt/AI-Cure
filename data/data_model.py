@@ -21,6 +21,7 @@ class DataModel(QObject):
     data_loaded = pyqtSignal(int, list, str)
     frame_set = pyqtSignal(int, dict, dict, str)
     graph_made = pyqtSignal(str)
+    next_poi = pyqtSignal(int)
 
     own_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,7 +34,7 @@ class DataModel(QObject):
         self._metadata = None
 
         # reward data tracking
-        self.reward_data_frame = None
+        self.reward_data_frame = None # type: pd.DataFrame
         self.reward_frame_is_dirty = False
         self.reward_data_aggregated = None
 
@@ -62,6 +63,25 @@ class DataModel(QObject):
     @property
     def data_write_time(self):
         return self._metadata.get("write_time", str())
+
+    @pyqtSlot(list, bool)
+    def find_next_poi(self, cols_to_search, search_backwards=False):
+
+        print(f"doing poi search with {cols_to_search}, will search backwards? {search_backwards}")
+        if search_backwards:
+            filtered_data_frame = self.reward_data_frame.loc[self._current_frame_number - 1:, cols_to_search]
+            filtered_data_frame = filtered_data_frame.iloc[::-1]
+        else:
+            filtered_data_frame = self.reward_data_frame.loc[self._current_frame_number + 1:, cols_to_search]
+
+        search_mask = filtered_data_frame.ne(0)
+        poi_rows = search_mask.any(axis=1)
+        poi_row_indexs = poi_rows[poi_rows].index
+
+        print(f"Got these rows: {poi_rows}")
+        print(f"type is {type(poi_rows)}")
+        next_poi = poi_row_indexs[0] + 1 if not poi_row_indexs.empty else self._current_frame_number
+        self.next_poi.emit(next_poi)
 
     @pyqtSlot(str)
     def load_data_from_path(self, path_to_load):

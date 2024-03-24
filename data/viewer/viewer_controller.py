@@ -29,11 +29,13 @@ class DataController(QObject):
         self.view.data_loaded.connect(self.model.load_data_from_path)
         self.view.new_frame_set.connect(self.model.set_to_frame)
         self.view.slider_changed.connect(self.model.make_slider_graph)
+        self.view.request_poi.connect(self.model.find_next_poi)
 
         # model signals
         self.model.data_loaded.connect(self.view.set_ui_to_data)
         self.model.frame_set.connect(self.view.on_frame_update)
         self.model.graph_made.connect(self.view.on_slider_graph_update)
+        self.model.next_poi.connect(self.view.set_frame)
 
     def launch_ui(self):
         self.main_window.show()
