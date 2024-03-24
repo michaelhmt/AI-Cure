@@ -2,8 +2,8 @@
 import lzma
 import os
 import json
-import msgpack
-import msgpack_numpy as m
+from datetime import datetime
+
 
 # site packages
 import numpy as np
@@ -110,6 +110,16 @@ class DataTracker:
             #print(f"Got data: {data}")
             master_data.append(data)
 
+        # Get the current date and time
+        now = datetime.now()
+
+        # Format the date and time
+        formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
+        meta_data = {
+            "write_time": formatted_now,
+            "model_run_name": self.run_name
+        }
+        master_data.append(meta_data)
         print(f"Have {len(master_data)} steps recorded ")
         write_file_path = os.path.join(self.write_folder, f"{self.run_name}_data_list.json")
         with open(write_file_path, "w+") as write_file:

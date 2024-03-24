@@ -14,8 +14,8 @@ DATA_LABELS = (
 plt.interactive(False)
 class DataModel(QObject):
 
-    data_loaded = pyqtSignal(int)
-    frame_set = pyqtSignal(int, dict, dict)
+    data_loaded = pyqtSignal(int, list)
+    frame_set = pyqtSignal(int, dict, dict, str)
     graph_made = pyqtSignal(str)
 
     own_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,22 +50,29 @@ class DataModel(QObject):
     def connect_signals(self):
         pass
 
+    @property
+    def data_features(self):
+        return list(self.reward_data_frame.columns)
+
     @pyqtSlot(str)
     def load_data_from_path(self, path_to_load):
         if not os.path.exists(path_to_load):
             print(f"Could not load given path {path_to_load}, as it does not exist")
 
+        print("loading data")
         with open(path_to_load, "r") as data_file:
             self._loaded_data = json.load(data_file)
+
+        print(f"I loaded: {len(self._loaded_data)} items")
         self._total_data_frames = len(self._loaded_data)
 
         # emit signal back to an ui if we have one
-        if self.reward_data_frame:
-            self.reward_frame_is_dirty = True
-        self.data_loaded.emit(self._total_data_frames)
+        self.make_reward_data_frame()
+
+        self.data_loaded.emit(self._total_data_frames, self.data_features)
 
     def make_reward_data_frame(self):
-        if not self.reward_data_frame or self.reward_frame_is_dirty:
+        if self.reward_data_frame is None or self.reward_frame_is_dirty:
             try:
                 flat_data = [frame["rewards_given"] for frame in self._loaded_data]
             except KeyError:
@@ -73,19 +80,23 @@ class DataModel(QObject):
                 flat_data = [frame["rewards given"] for frame in self._loaded_data]
             self.reward_data_frame = pd.DataFrame(flat_data)
 
+
+    # will get called by the slider when postion chnages to remake and re add the image
+    # will also
     @pyqtSlot(int, int, list)
-    def make_slider_graph(self, width, height, cols_to_hide):
+    def make_slider_graph(self, width, height, cols_to_show):
 
         self.make_reward_data_frame()
 
+        print(f"making graph with these features: {cols_to_show}")
         # we assume a dpi of 100
         width_inches = width / 100
         height_inches = height / 100
 
         print(f"we have thease cols: {self.reward_data_frame.columns}")
-        self.current_graph = self.reward_data_frame[[c for c in self.reward_data_frame.columns if c not in cols_to_hide]].plot(figsize=(width_inches, height_inches),
-                                                                                                                               kind="line",
-                                                                                                                               grid=True)
+        self.current_graph = self.reward_data_frame[[c for c in self.reward_data_frame.columns if c in cols_to_show]].plot(figsize=(width_inches, height_inches),
+                                                                                                                           kind="line",
+                                                                                                                           grid=True)
 
         self.current_graph.set_facecolor('gray')  # Set the background color of the plot area
         legend = self.current_graph.get_legend()
@@ -118,20 +129,23 @@ class DataModel(QObject):
         if os.path.exists(save_path):
             os.remove(save_path)
         plt.savefig(save_path, bbox_inches=new_bbox, pad_inches=0, dpi=dpi)
-        self.graph_made(save_path)
-
+        self.graph_made.emit(save_path)
 
     @pyqtSlot(int)
     def set_to_frame(self, frame_number):
 
+        print("Setting data frame")
         self._current_frame_number = frame_number
 
         frame_index = frame_number-1
         frame_data = self._loaded_data[frame_index]
 
-        print(frame_data)
+        print(f"This is frame data: {frame_data}")
 
         self._data_image_path = frame_data.get("vision_image_path")
+        if not self._data_image_path:
+            self._data_image_path = frame_data.get("serlized_vision")
+
         self._frame_reward_data = frame_data.get("rewards_given")
 
         if not self._frame_reward_data:
@@ -142,9 +156,11 @@ class DataModel(QObject):
             data_labels[label] = frame_data[label]
         self._data_labels = data_labels
 
+        print("emitting ui signal")
         self.frame_set.emit(self._current_frame_number,
                             self._frame_reward_data,
-                            self._data_labels)
+                            self._data_labels,
+                            self._data_image_path)
 
 if __name__ == "__main__":
     model = DataModel()
