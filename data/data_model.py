@@ -14,7 +14,11 @@ DATA_LABELS = (
 plt.interactive(False)
 class DataModel(QObject):
 
-    data_loaded = pyqtSignal(int, list)
+    """
+    Model for tracking and interacting with data created via the data tracker, emit Qt signals for UI integration
+    """
+
+    data_loaded = pyqtSignal(int, list, str)
     frame_set = pyqtSignal(int, dict, dict, str)
     graph_made = pyqtSignal(str)
 
@@ -27,6 +31,7 @@ class DataModel(QObject):
         # data vars
         self._loaded_data = None
         self._total_data_frames = 0
+        self._metadata = None
 
         # reward data tracking
         self.reward_data_frame = None
@@ -47,62 +52,79 @@ class DataModel(QObject):
         if not os.path.exists(self.graph_folder):
             os.makedirs(self.graph_folder)
 
-    def connect_signals(self):
-        pass
-
     @property
     def data_features(self):
         return list(self.reward_data_frame.columns)
 
+    @property
+    def data_name(self):
+        return self._metadata.get("model_run_name", str())
+
+    @property
+    def data_write_time(self):
+        return self._metadata.get("write_time", str())
+
     @pyqtSlot(str)
     def load_data_from_path(self, path_to_load):
+        # type: (str) -> None
+        """
+        Load a json file from a path, json must be a list of dicts ideally made via the data tracker
+
+        Args:
+            path_to_load: on disk path to Json file to load
+
+        """
         if not os.path.exists(path_to_load):
             print(f"Could not load given path {path_to_load}, as it does not exist")
 
-        print("loading data")
         with open(path_to_load, "r") as data_file:
             self._loaded_data = json.load(data_file)
 
+        # extract metadata
+        self._metadata = self._loaded_data.pop(-1)
         print(f"I loaded: {len(self._loaded_data)} items")
         self._total_data_frames = len(self._loaded_data)
 
         # emit signal back to an ui if we have one
         self.make_reward_data_frame()
 
-        self.data_loaded.emit(self._total_data_frames, self.data_features)
+        self.data_loaded.emit(self._total_data_frames, self.data_features, self.data_name)
 
     def make_reward_data_frame(self):
+        """
+        Make Pandas data frame for rewards if one does not exist already
+        Returns:
+
+        """
         if self.reward_data_frame is None or self.reward_frame_is_dirty:
-            try:
-                flat_data = [frame["rewards_given"] for frame in self._loaded_data]
-            except KeyError:
-                # old pattern delete this
-                flat_data = [frame["rewards given"] for frame in self._loaded_data]
+            flat_data = [frame["rewards_given"] for frame in self._loaded_data]
             self.reward_data_frame = pd.DataFrame(flat_data)
 
-
-    # will get called by the slider when postion chnages to remake and re add the image
-    # will also
     @pyqtSlot(int, int, list)
     def make_slider_graph(self, width, height, cols_to_show):
+        # type: (int, int, list[str]) -> None
+        """
+        main method for making a graph of the rewards data can be set to a custom size and filter the cols
+
+        Args:
+            width: width in pixels
+            height: height in pixels
+            cols_to_show:  list of the cols to display on the graph
+        """
 
         self.make_reward_data_frame()
-
-        print(f"making graph with these features: {cols_to_show}")
         # we assume a dpi of 100
         width_inches = width / 100
         height_inches = height / 100
-
-        print(f"we have thease cols: {self.reward_data_frame.columns}")
         self.current_graph = self.reward_data_frame[[c for c in self.reward_data_frame.columns if c in cols_to_show]].plot(figsize=(width_inches, height_inches),
                                                                                                                            kind="line",
                                                                                                                            grid=True)
 
-        self.current_graph.set_facecolor('gray')  # Set the background color of the plot area
+        # remove un wanted graph elements
+        self.current_graph.set_facecolor('gray')
         legend = self.current_graph.get_legend()
         if legend:
             legend.remove()
-
         plt.tight_layout()
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Values are fractions (0 to 1)
         #self.current_graph.axis('off')
@@ -111,15 +133,15 @@ class DataModel(QObject):
         self.current_graph.set_xticklabels([])
         self.current_graph.set_yticklabels([])
 
+        # add line that tracks the current frame
         self.current_graph.axvline(x=self._current_frame_number, color='red', linestyle='--')
 
+        # set custom area we want to render so we have no empty white space
         fig = self.current_graph.figure
         dpi = fig.dpi
         trim_percentage = 0.045  # Desired trim percentage
         fig_width_inch, fig_height_inch = fig.get_size_inches()
         trim_inches = (fig_width_inch * trim_percentage, fig_height_inch * trim_percentage)
-
-        # Calculate new bounding box in inches
         from matplotlib.transforms import Bbox
         new_bbox = Bbox(
             [[trim_inches[0], trim_inches[1]], [fig_width_inch - trim_inches[0], fig_height_inch - trim_inches[1]]])
@@ -133,14 +155,16 @@ class DataModel(QObject):
 
     @pyqtSlot(int)
     def set_to_frame(self, frame_number):
-
-        print("Setting data frame")
+        # type: (int) -> None
+        """
+        Set the currently selected frame from the existing data
+        Args:
+            frame_number: frmae number to set to, frame must exist in the data range.
+        """
         self._current_frame_number = frame_number
 
         frame_index = frame_number-1
         frame_data = self._loaded_data[frame_index]
-
-        print(f"This is frame data: {frame_data}")
 
         self._data_image_path = frame_data.get("vision_image_path")
         if not self._data_image_path:
@@ -156,7 +180,6 @@ class DataModel(QObject):
             data_labels[label] = frame_data[label]
         self._data_labels = data_labels
 
-        print("emitting ui signal")
         self.frame_set.emit(self._current_frame_number,
                             self._frame_reward_data,
                             self._data_labels,
