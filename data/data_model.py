@@ -68,6 +68,7 @@ class DataModel(QObject):
     def find_next_poi(self, cols_to_search, search_backwards=False):
 
         print(f"doing poi search with {cols_to_search}, will search backwards? {search_backwards}")
+        print(f"searching from: {self._current_frame_number}")
         if search_backwards:
             filtered_data_frame = self.reward_data_frame.loc[self._current_frame_number - 1:, cols_to_search]
             filtered_data_frame = filtered_data_frame.iloc[::-1]
@@ -116,6 +117,11 @@ class DataModel(QObject):
 
         """
         if self.reward_data_frame is None or self.reward_frame_is_dirty:
+            for index, frame in enumerate(self._loaded_data):
+                if not frame.get("rewards_given"):
+                    frame["rewards_given"] = dict()
+                    self._loaded_data[index] = frame
+
             flat_data = [frame["rewards_given"] for frame in self._loaded_data]
             self.reward_data_frame = pd.DataFrame(flat_data)
 
@@ -192,7 +198,9 @@ class DataModel(QObject):
         self._frame_reward_data = frame_data.get("rewards_given")
 
         if not self._frame_reward_data:
-            self._frame_reward_data = frame_data.get("rewards given")
+            self._frame_reward_data = frame_data.get("rewards given", {}) or dict()
+
+        print(f"reward data is {self._frame_reward_data}")
 
         data_labels = dict()
         for label in DATA_LABELS:

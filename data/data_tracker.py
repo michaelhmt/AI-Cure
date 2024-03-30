@@ -51,12 +51,14 @@ class DataTracker:
         self.run_name = run_name
         self.write_folder = self.get_write_folder()
 
+        self._static_data = dict()
+
         self._reset()
 
     def _reset(self):
         # current vars
         self.current_action = None
-        self.current_reward = None
+        self.current_reward = dict()
         self.current_state = None
         self.current_vision = None
         self.current_step = None # type: StepSummary
@@ -89,6 +91,9 @@ class DataTracker:
 
         return write_folder
 
+    def add_static_data(self, data_label, data_to_add):
+        self._static_data[data_label] = data_to_add
+
     def write_data(self):
 
         master_data = list()
@@ -119,6 +124,8 @@ class DataTracker:
             "write_time": formatted_now,
             "model_run_name": self.run_name
         }
+        meta_data.update(self._static_data)
+
         master_data.append(meta_data)
         print(f"Have {len(master_data)} steps recorded ")
         write_file_path = os.path.join(self.write_folder, f"{self.run_name}_data_list.json")

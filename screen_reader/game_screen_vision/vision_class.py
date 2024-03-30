@@ -17,6 +17,7 @@ import pytesseract
 from PIL import Image
 
 # own modules
+import project_constants
 from screen_reader.game_screen_vision.state_object import GameVisualState
 import screen_reader.screen_reader_constants as screen_reader_constants
 from screen_reader.game_screen_vision.vision_utils import make_hcure_game_states
@@ -61,7 +62,7 @@ class GameVisionClass:
 
 
     def capture_window(self, check_this_roi=None):
-        # type: () -> Image
+        # type: (bool) -> Image
 
         # Reshape the numpy array to match the image dimensions.
         # The 'BGRX' suggests the image is 4-channel with the last being ignored.
@@ -172,8 +173,8 @@ class GameVisionClass:
 
 
 if __name__ == "__main__":
-    my_h_cure_exe_path = "E:\\holocure\\Game_depolyment\\HoloCure.exe"
-    vision_model_path = "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\v004\\hcure_font_model_4.traineddata"
+    my_h_cure_exe_path = project_constants.HCURE_GAME_EXE
+    vision_model_path = project_constants.HCURE_OCR_MODEL_PATH
     proc = subprocess.Popen(my_h_cure_exe_path)
     time.sleep(15)  # allow the proc to start
     proc_id = proc.pid

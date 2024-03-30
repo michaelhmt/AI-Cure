@@ -12,6 +12,7 @@ import fuzzywuzzy.fuzz
 from fuzzywuzzy import fuzz
 
 # own modules
+import project_constants
 from screen_reader.screen_reader_constants import TESSERACT_DEFAULT_WIN_INSTALL_PATH
 
 BOX_CMD = "{tes_exe} {image_path} {box_path} batch.nochop makebox"
@@ -167,7 +168,7 @@ def extract_line_image_and_boxes(img_path, box_path, y_coord, height, output_img
         f.writelines(new_boxes)
 
 def slice_level_up_screen(output_dir):
-    data = "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\data_capture\\hcure_level_up\\bad"
+    data = project_constants.LEVEL_UP_IMAGES
     for image_path in file_path_generator(data):
         path_bits = image_path.split(".")
         if path_bits[-1] == "png":
@@ -194,13 +195,15 @@ def dynamic_threshold(string_length):
     max_threshold = 85
 
     # Linear interpolation between min and max thresholds
-    # This will start at min_threshold for string_length = 1
+    # This will start at min_threshold for string_
+    # length = 1
     # and gradually increase to max_threshold as string_length increases
     threshold = min_threshold + (max_threshold - min_threshold) * (string_length - 1) / 100
     return min(max_threshold, threshold)
 
 
 def str_is_similar(string_to_check, str_to_compare, threshold=None):
+    print(f"checking if {string_to_check} is similar to {str_to_compare}")
     if not threshold:
         threshold = dynamic_threshold(min(len(string_to_check), len(str_to_compare)))
     return threshold <= fuzzywuzzy.fuzz.ratio(string_to_check, str_to_compare)
@@ -208,4 +211,4 @@ def str_is_similar(string_to_check, str_to_compare, threshold=None):
 
 if __name__ == "__main__":
     #make_game_captures_box_files()
-    slice_level_up_screen("E:\\Python\\Ai_Knight\\screen_reader\\font_train\\data_capture\\hcure_level_up")
+    slice_level_up_screen(project_constants.LEVEL_UP_OUT_PUT_DIR)

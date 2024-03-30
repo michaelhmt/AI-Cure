@@ -1,5 +1,6 @@
 import os
-img_dir = "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\data_capture\\misc_training"
+import project_constants
+img_dir = project_constants.IMAGE_MISC_TRAING_DIR
 name_constant = "h_cure_mis_capture"
 
 # run this inside the game_captures_folder.

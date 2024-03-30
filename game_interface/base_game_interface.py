@@ -17,6 +17,7 @@ import pytesseract
 from PIL import Image
 
 # own modules
+import project_constants
 from states.state_object import BaseGameState
 from screen_reader.game_screen_vision.state_object import GameVisualState as VisualGameState
 from memory_reader.game_state import MemoryGameState
@@ -34,7 +35,7 @@ import screen_reader.game_screen_vision.vision_utils as vision_utils
 
 class BaseGameInterface:
 
-    def __init__(self, game_exe_proc_id, config, game_states=None, parent_id_search=True):
+    def __init__(self, game_exe_proc_id, config, parent_app, game_states=None, parent_id_search=True):
         self.proc_id = game_exe_proc_id
         self._current_state = None
         self._states = game_states or list()
@@ -46,6 +47,11 @@ class BaseGameInterface:
         # get the handler of the exe id
         self.matched_handler = None
         self.get_exe_handle(parent_id_search)
+        self.app_instance = parent_app
+
+    def switch_to_new_game_window(self, new_proc_id):
+        self.proc_id = new_proc_id
+        self.get_exe_handle()
 
     def get_exe_handle(self, search_parent_procs=True):
         # type: (bool) -> None
@@ -127,6 +133,13 @@ class BaseGameInterface:
         self._last_image = image_np
         return image_np
 
+    def focus_game(self):
+        # Try to bring the window to the foreground
+        win32gui.SetForegroundWindow(self.matched_handler)
+        # If the window is minimized, restore it
+        if win32gui.IsIconic(self.matched_handler):
+            win32gui.ShowWindow(self.matched_handler, win32con.SW_RESTORE)
+
     def get_window_size(self):
         window_array = self.get_window_array()
         shape = window_array.shape
@@ -156,7 +169,6 @@ class BaseGameInterface:
 
         for this_state in self._states: # type: BaseGameState
             this_state_interface = this_state.interface
-            print(f"checking if we are in {this_state.name}")
             in_this_state = this_state_interface.state_is_active(this_state)
             if in_this_state:
                 self._current_state = this_state
@@ -190,7 +202,7 @@ if __name__ == "__main__":
     # make visual states
     states = list()
 
-    config_path = "E:\\Python\\Ai_Knight\\config.yaml"
+    config_path = project_constants.CONFIG_PATH
     config = hcure_config.HcureConfig(config_path)
     game_proc = hcure_utils.start_hcure(config)
     game_interface = BaseGameInterface(game_proc)

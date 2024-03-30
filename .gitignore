@@ -34,6 +34,8 @@ MANIFEST
 
 # Serlized data file with images can get pretty big 
 data/hcure/*
+Game_depolyment/*
+
 
 # Installer logs
 pip-log.txt

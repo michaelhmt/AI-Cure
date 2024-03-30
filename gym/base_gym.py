@@ -69,11 +69,13 @@ class BaseEnv(Env):
     def __init__(self,
                  game_interface: BaseGameInterface,
                  config: BaseConfig,
-                 model_name: str):
+                 model_name: str,
+                 app):
         super(BaseEnv, self).__init__()
 
         # set up
         self.game_interface = game_interface
+        self.parent_app = app
         self.config = config
         self.current_step = 0
 

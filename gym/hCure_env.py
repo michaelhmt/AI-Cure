@@ -1,8 +1,10 @@
 # python built in
 import subprocess
 import time
+import traceback
 
 # project modules
+import project_constants
 from gym.base_gym import BaseEnv, RewardData
 from game_interface.hcure_interface import HcureGameInterface
 from config.hcure_config import HcureConfig
@@ -39,9 +41,10 @@ class HCureEnv(BaseEnv):
 
     state_map = {
         "game": {"restrict_inputs": ["esc"]},
-        "char_select": {"restrict_inputs": ["esc"]}
+        "char_select": {"restrict_inputs": ["esc"]},
+        "level_up": {"restrict_inputs": ["d"]}
     }
-    hold_keys = ("w", "a", "s", "d")
+    hold_keys = {"game": ("w", "a", "s", "d")}
 
     @property
     def action_map(self):
@@ -61,8 +64,8 @@ class HCureEnv(BaseEnv):
             process.terminate()
 
         new_app = hcure_utils.start_hcure(self.config)
-        self.game_interface = HcureGameInterface(new_app.pid, self.config)
-        self.game_interface.add_known_states()
+        self.parent_app.re_target_new_proc(new_app)
+        self.game_interface.switch_to_new_game_window(new_app.pid)
         self.data_tracker = HCureDataTracker("hcure", self.model_run_name)
 
         # reset any vars we track
@@ -82,7 +85,7 @@ class HCureEnv(BaseEnv):
             current_state_name = "No state"
 
         data_tracker.current_state = current_state_name
-        print(f"{'='*10}\nIn state: {current_state_name} {'='*10}")
+        print(f"{'='*10}\nIn state: {current_state_name}\n {'='*10}")
         state_settings = self.state_map.get(current_state_name)
 
         key_to_press = self.action_map.get(action_to_take)
@@ -92,12 +95,19 @@ class HCureEnv(BaseEnv):
                 print(f"Agent wanted to press {key_to_press['action_key']} is restricted in state {current_state_name}")
                 can_press_key = False
 
+        # just encase we are in the level up, but we pressed D as we entered it
+        if current_state_name == "level_up":
+            self.press_key("esc")
+
         # take the action the agent wants
         if can_press_key:
             target_key = key_to_press['action_key']
             data_tracker.current_action = target_key
-            if target_key in self.hold_keys:
-                self.hold_key(target_key)
+            if current_state_name in self.hold_keys.keys():
+                if target_key in self.hold_keys[current_state_name]:
+                    self.hold_key(target_key)
+                else:
+                    self.press_key(target_key)
             else:
                 self.press_key(target_key)
         else:
@@ -107,13 +117,19 @@ class HCureEnv(BaseEnv):
         # find what state we are in now
         state_data = self.game_interface.get_current_state_info()
         current_screen_state = self.game_interface.get_window_array()
-        is_done = self.check_if_done()
+        is_done = self.check_if_done(state_data)
         data_tracker.current_vision = current_screen_state
 
         if current_state_name == "char_select" and key_to_press['action_name'] == "proceed":
             # at this point the AI has selected a character so we will just put them in game
-            print(f"proceeding with char {state_data.get('selected')}")
+            data_tracker.add_static_data("selected_char", state_data.get('selected'))
             hcure_utils.char_select_to_game()
+            time.sleep(0.5)
+            #  pause the game so we can inject the cheat engine stuff and get a report
+            self.press_key("esc")
+            self.game_interface.make_cheat_engine_report()
+            self.game_interface.focus_game()
+            self.press_key("esc")
 
         # we could not find what sate we are in
         if not state_data:
@@ -145,17 +161,20 @@ class HCureEnv(BaseEnv):
         with self.data_tracker as data_tracker:
             try:
                 step_data = self.run_step(action, data_tracker)
-            except(GameMemoryReadException, screen_reader_constants.ScreenReadException):
+            except(GameMemoryReadException, screen_reader_constants.ScreenReadException) as e:
                 print("Failed to read from exe writing data and ending....")
+                print(f"error was {e}")
+                print(f"Traceback is: {traceback.format_exc()}")
                 data_tracker.write_data()
                 return [], 0, False, True, {}
 
             return step_data
 
-
-    def check_if_done(self):
+    def check_if_done(self, current_sate_report):
         # maybe check here to see if we are on the game over screen
-        if self.current_step >= self.config.get_max_steps():
+        game_over = current_sate_report.get('gameOvered') == 1.0
+        if self.current_step >= self.config.get_max_steps() or game_over:
+            print(f"Time exceeded or game is over: game over var {game_over}")
             self.data_tracker.write_data()
             return True
         else:
@@ -163,11 +182,11 @@ class HCureEnv(BaseEnv):
 
 
 if __name__ == "__main__":
-    yaml_path = "E:\\Python\\Ai_Knight\\config.yaml"
+    yaml_path = project_constants.CONFIG_PATH
     my_config = HcureConfig(yaml_path)
 
-    my_h_cure_exe_path = "E:\\holocure\\Game_depolyment\\HoloCure.exe"
-    vision_model_path = "E:\\Python\\Ai_Knight\\screen_reader\\font_train\\trained_model\\hcure_font_model_5.traineddata"
+    my_h_cure_exe_path = project_constants.HCURE_GAME_EXE
+    vision_model_path = project_constants.HCURE_OCR_MODEL_PATH
     proc = subprocess.Popen(my_h_cure_exe_path)
     time.sleep(15)  # allow the proc to start
     proc_id = proc.pid

@@ -2,6 +2,8 @@ from typing import Any
 import yaml
 import os
 
+import project_constants
+
 class BaseConfig:
 
     def __init__(self, yaml_path, add_top_level_attrs=True):
@@ -83,6 +85,6 @@ class BaseConfig:
         return self._raw_yaml_data['vision_settings']["start_up_time"]
 
 if __name__ == "__main__":
-    yaml_path = "E:\\Python\\Ai_Knight\\config.yaml"
+    yaml_path = project_constants.CONFIG_PATH
     my_config = BaseConfig(yaml_path)
     print(dir(my_config))

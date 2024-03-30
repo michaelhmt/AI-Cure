@@ -61,7 +61,7 @@ class BaseApp:
         self.find_save_paths()
 
 
-        self._env = self.env_constructor(self.interface_object, self.config, self.model_name)
+        self._env = self.env_constructor(self.interface_object, self.config, self.model_name, self)
         if self.check_env:
             env_checker.check_env(self._env)
 
@@ -77,18 +77,23 @@ class BaseApp:
     def env(self):
         return self._env
 
+    def re_target_new_proc(self, new_proc):
+        self.app_proc = new_proc
+        self.proc_id = self.app_proc.pid
+        self.memory_class.retarget_proc(self.proc_id)
+
     def activate_interface(self):
         if not self.app_proc:
             self.app_proc = subprocess.Popen(self.target_exe_path)
             time.sleep(self.start_up_delay)
 
         self.proc_id = self.app_proc.pid
-        self.vision_class = GameVisionClass(self.proc_id, self.vision_model_path)
+
+        self.interface_object = HcureGameInterface(self.proc_id, self.config, self)
+        self.vision_class = GameVisionClass(self.interface_object.get_window_array, self.vision_model_path)
         self.memory_class = GameMemoryClass(self.proc_id)
 
-        self.interface_object = HcureGameInterface(self.proc_id, self.config)
         self.interface_object.add_known_states()
-
 
     def find_save_paths(self):
         user_set_output_path = self._config.get_output_path()
@@ -102,13 +107,18 @@ class BaseApp:
         os.makedirs(output_dir)
         self.model_out_put_dir = output_dir
 
+    def add_info_mem_interface(self, info_to_add):
+        self.memory_class.add_app_data(info_to_add)
+
     def run_training(self):
         self._model = PPO('CnnPolicy', self.env, verbose=1, n_steps=self.run_steps * self.runs_per_update,
                           batch_size=128, n_epochs=3, gamma=0.98)
 
         for learning_step in range(self.learning_steps):
+            print(f"starting step: {learning_step}")
             self._model.learn(total_timesteps=self.run_steps * self.runs_per_update*self.updates_per_checkpoint)
             checkpoint_save_path = os.path.join(self.model_out_put_dir, f"{self.model_name}_chkpt_{learning_step}")
+            print(f"saving checkpoint to {checkpoint_save_path}")
             self._model.save(checkpoint_save_path)
 
     def run_testing_interface(self):

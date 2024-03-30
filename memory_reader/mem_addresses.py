@@ -1,7 +1,8 @@
 def is_greater_than(result):
-    print(f"Testing if {result} is greater than 1")
     return result > 1
 
+def is_true(result):
+    return bool(result)
 
 class GameMemoryReadException(Exception):
     pass
@@ -16,6 +17,8 @@ LEVEL = "level"
 KILLS = "kills"
 COINS = "coins"
 HP = "HP"
+GAME_OVER = "gameOvered"
+LEVEL_UP_SCREEN = "leveled"
 
 address = {
     EXP: {"base": 0x03148818, "offsets": [0x10, 0xA20, 0x1B0, 0x48, 0x10, 0x6F40, 0x0]},
@@ -33,8 +36,12 @@ address = {
                          "offsets": [0x0, 0x10F0, 0x18, 0x68, 0x10, 0x48, 0x10, 0x1FB0, 0x0, 0x48, 0x10, 0x0, 0x0]},
     "haste_level_ups": {"base": 0x03157870,
                         "offsets": [0x0, 0x10F0, 0x18, 0x68, 0x10, 0x48, 0x10, 0x1FB0, 0x0, 0x48, 0x10, 0xC0, 0x0]},
+    GAME_OVER: {"is_external": True, "report_key": GAME_OVER},
     STATE_CHECK_KEY: {"base": 0x0314EE60, "offsets": [0x70, 0x28, 0x90, 0x18, 0x170, 0x98, 0x48, 0x10, 0x9C0, 0x0],
                       STATE_CHECK_RESULTS_STR: is_greater_than, STATE_CHECK_RESULTS_OP: is_greater_than}
 }
 
-IN_GAME_STATES = {"game": address}
+IN_GAME_STATES = {
+    "level_up": {STATE_CHECK_KEY: {"is_external": True, "report_key": LEVEL_UP_SCREEN,
+                                   STATE_CHECK_RESULTS_STR: 1.0, STATE_CHECK_RESULTS_OP: None}},
+    "game": address}

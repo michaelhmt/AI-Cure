@@ -31,6 +31,9 @@ CHAR_NAME = {"start_x": 160, "start_y": 275, "end_x": 364, "end_y": 304}
 SCREEN_HEADER = {"start_x": 452, "start_y": 53, "end_x": 838, "end_y": 97, STATE_CHECK_RESULTS_STR: "CHOOSEROPFMNAOOIL"}
 SELECTED_NAME = {"start_x": 52, "start_y": 474, "end_x": 382, "end_y": 509}
 
+# level up
+LEVEL_UP_TEXT = {"start_x": 136, "start_y": 229, "end_x": 348, "end_y": 280, STATE_CHECK_RESULTS_STR: "VEEUPI"} # I hate this
+
 # main menu
 PLAY_BUTTON = {"start_x": 1011, "start_y": 249, "end_x": 1119, "end_y": 286, STATE_CHECK_RESULTS_STR: "Play"}
 
@@ -38,11 +41,15 @@ ENEMIES_KILLED_KEY = "killed"
 LVL_KEY = "lvl"
 TIME_KEY = "time"
 SELECTED_CHAR_KEY = "selected"
+LEVEL_UP = "level_up"
 
 # keys
 GAME_KEYS = (ENEMIES_KILLED_KEY, LVL_KEY, TIME_KEY)
 CHAR_SELECT_KEYS = (SELECTED_CHAR_KEY,)
 ALL_KEYS = (ENEMIES_KILLED_KEY, LVL_KEY, TIME_KEY, SELECTED_CHAR_KEY)
+
+# 136 229
+#348 280
 
 # state infos
 GAME_ROIS = {ENEMIES_KILLED_KEY: ENEMIES_KILLED,
@@ -52,5 +59,9 @@ GAME_ROIS = {ENEMIES_KILLED_KEY: ENEMIES_KILLED,
 MAIN_MENU_ROIS = {STATE_CHECK_ROI_KEY: PLAY_BUTTON}
 CHAR_SELECT_RIOS = {SELECTED_CHAR_KEY: SELECTED_NAME,
                     STATE_CHECK_ROI_KEY: SCREEN_HEADER}
+LEVEL_UP_RIOS = {LEVEL_UP: LEVEL_UP_TEXT,
+                 STATE_CHECK_ROI_KEY: LEVEL_UP_TEXT}
 
 HCURE_ROIS = {"char_select": CHAR_SELECT_RIOS}
+# HCURE_ROIS = {"char_select": CHAR_SELECT_RIOS,
+#               "level_up": LEVEL_UP_RIOS}

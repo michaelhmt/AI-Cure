@@ -9,6 +9,7 @@ import pyautogui
 import keyboard
 
 # own modules
+import project_constants
 import screen_reader.font_train.training_utils as training_utils
 
 TIME_COORDS = {"x": 1224, "y":426, "width": 110, "height": 35}
@@ -78,7 +79,7 @@ class Collector:
 
 
 if __name__ == "__main__":
-    #default_box_file="E:\\Python\\Ai_Knight\\screen_reader\\font_train\\data_capture\\hcure_level_up\\back-up\\default_box.box"
+    #default_box_file=project_constants.DEFAULT_BOX
     data_collector = Collector(TIME_COORDS, "hcure_time_counter_set_02")
     #data_collector.capture_data()
     #data_collector.capture_one(prefix_name="hcure_level_number", overwrite=False)
