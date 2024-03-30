@@ -83,4 +83,4 @@ if __name__ == "__main__":
     data_collector = Collector(TIME_COORDS, "hcure_time_counter_set_02")
     #data_collector.capture_data()
     #data_collector.capture_one(prefix_name="hcure_level_number", overwrite=False)
-    data_collector.make_box_files("E:/Python/Ai_Knight/screen_reader/font_train/trained_model/v004/hcure_font_model_4.traineddata")
+    data_collector.make_box_files(project_constants.HCURE_OCR_MODEL_PATH)
