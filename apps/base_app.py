@@ -17,7 +17,31 @@ from name_gen.run_name_gen import get_random_name
 # Site Packages
 from stable_baselines3 import A2C, PPO
 from stable_baselines3.common import env_checker
+from stable_baselines3.common.callbacks import BaseCallback
 
+class GameMonitiorCallBack(BaseCallback):
+    def __init__(self, print_freq, pause_step, game_interface, verbose=1):
+        super(GameMonitiorCallBack, self).__init__(verbose)
+        self.print_freq = print_freq
+
+        self.learning_step_size = pause_step
+        self.game_interface = game_interface
+        self.pause_called = False
+
+    def _on_step(self) -> bool:
+        if self.num_timesteps % self.print_freq == 0:
+            print(f"Total timesteps: {self.num_timesteps}")
+            if self.pause_called:
+                print("un-pauseing game as learning has begun again")
+                self.game_interface.pause()
+                self.pause_called = False
+
+        if self.num_timesteps % self.learning_step_size == 0:
+            print(f"{self.num_timesteps} is a pause step, sending pause command")
+            self.game_interface.pause()
+            self.pause_called = True
+
+        return True
 
 class BaseApp:
     own_path = pathlib.Path(__file__).parent.resolve()
@@ -51,6 +75,9 @@ class BaseApp:
         self.runs_per_update = self._config.get_runs_per_update()
         self.updates_per_checkpoint = self._config.get_updates_per_checkpoint()
         self.learning_steps = self._config.get_learn_steps()
+
+        self.call_back = None
+        self.total_time_steps = 0
 
         # app settings
         self.app_proc = app_proc
@@ -111,12 +138,20 @@ class BaseApp:
         self.memory_class.add_app_data(info_to_add)
 
     def run_training(self):
-        self._model = PPO('CnnPolicy', self.env, verbose=1, n_steps=self.run_steps * self.runs_per_update,
+        self.total_time_steps = self.run_steps * self.runs_per_update
+
+        self._model = PPO('CnnPolicy', self.env, verbose=1, n_steps=self.total_time_steps,
                           batch_size=128, n_epochs=3, gamma=0.98)
 
+        self.call_back = GameMonitiorCallBack(print_freq=10, pause_step=self.total_time_steps,
+                                              game_interface=self.interface_object, verbose=1)
+
         for learning_step in range(self.learning_steps):
+            total_time_steps = self.run_steps * self.runs_per_update*self.updates_per_checkpoint
             print(f"starting step: {learning_step}")
-            self._model.learn(total_timesteps=self.run_steps * self.runs_per_update*self.updates_per_checkpoint)
+            print(f"will go to {total_time_steps} and then write checkpoint")
+            self._model.learn(total_timesteps=total_time_steps,
+                              callback=self.call_back)
             checkpoint_save_path = os.path.join(self.model_out_put_dir, f"{self.model_name}_chkpt_{learning_step}")
             print(f"saving checkpoint to {checkpoint_save_path}")
             self._model.save(checkpoint_save_path)

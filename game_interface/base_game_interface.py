@@ -41,6 +41,7 @@ class BaseGameInterface:
         self._states = game_states or list()
         self._config = config
         self._last_image = None
+        self.is_paused = False
 
         self.blank_state = BaseGameState("No State found", dict(), None)
 
@@ -187,6 +188,13 @@ class BaseGameInterface:
         return state_info
 
     def add_known_states(self):
+        """
+        Implement on the specific game subclass
+
+        """
+        pass
+
+    def pause(self):
         """
         Implement on the specific game subclass
 

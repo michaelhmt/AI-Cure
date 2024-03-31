@@ -40,8 +40,8 @@ class GameMemoryClass:
         if address_info.get("is_external"):
             # in this case the value is stored in the extra address's
             retrieval_key = address_info.get("report_key")
-            address_value = int(self.extra_adresses.get(retrieval_key, 0), 16)
             try:
+                address_value = int(self.extra_adresses.get(retrieval_key, 0), 16)
                 value = self.read_pointer(address_value)
             except:
                 return None
@@ -60,7 +60,7 @@ class GameMemoryClass:
         try:
             results = self.get_value(test_address)
         except Exception as e:
-            print(f"Got error: {e} ")
+            #print(f"Got error: {e} ")
             return False
 
         if callable(expected_result):

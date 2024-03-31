@@ -54,11 +54,11 @@ class RewardData:
             print(f"decreasing {self.name} by {self._decrease_reward}")
             reward = self._decrease_reward
         else:
-            print(f"no change in {self.name} doing {self._decrease_reward}")
+            print(f"no change in {self.name} doing {self._unchanged_reward}")
             reward = self._unchanged_reward
 
         if self._difference_mult:
-            reward = reward * ((last_value - self._current_value) * -1)
+            reward = reward * ((last_value - self._current_value))
 
         self.reward_history.append(reward)
         return reward

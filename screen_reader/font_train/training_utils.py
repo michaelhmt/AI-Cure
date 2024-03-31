@@ -203,7 +203,7 @@ def dynamic_threshold(string_length):
 
 
 def str_is_similar(string_to_check, str_to_compare, threshold=None):
-    print(f"checking if {string_to_check} is similar to {str_to_compare}")
+    #print(f"checking if {string_to_check} is similar to {str_to_compare}")
     if not threshold:
         threshold = dynamic_threshold(min(len(string_to_check), len(str_to_compare)))
     return threshold <= fuzzywuzzy.fuzz.ratio(string_to_check, str_to_compare)

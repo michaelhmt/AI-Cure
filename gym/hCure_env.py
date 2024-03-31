@@ -145,7 +145,9 @@ class HCureEnv(BaseEnv):
             reward_data.set_new_value(state_roi_value)
             roi_reward = reward_data.get_reward_value()
             reward_data_tracking[reward_var_name] = roi_reward
+            print(f"reward {reward_var_name} adding {roi_reward} to {reward}")
             reward += roi_reward
+            print(f"new reward of {reward}")
 
         self.total_reward += reward
         reward_data_tracking["cumulative_reward"] = reward
@@ -159,6 +161,9 @@ class HCureEnv(BaseEnv):
 
     def step(self, action):
         with self.data_tracker as data_tracker:
+            if self.game_interface.is_paused:
+                # unpause the game if we are starting a step after data write or learn steps complete
+                self.game_interface.pause()
             try:
                 step_data = self.run_step(action, data_tracker)
             except(GameMemoryReadException, screen_reader_constants.ScreenReadException) as e:
@@ -172,9 +177,14 @@ class HCureEnv(BaseEnv):
 
     def check_if_done(self, current_sate_report):
         # maybe check here to see if we are on the game over screen
-        game_over = current_sate_report.get('gameOvered') == 1.0
+        game_over = False
+        if current_sate_report:
+            game_over = current_sate_report.get('gameOvered') == 1.0
         if self.current_step >= self.config.get_max_steps() or game_over:
             print(f"Time exceeded or game is over: game over var {game_over}")
+            if not game_over:
+                # pause the game if we need to
+                self.game_interface.pause()
             self.data_tracker.write_data()
             return True
         else:

@@ -95,7 +95,7 @@ class DataTracker:
         self._static_data[data_label] = data_to_add
 
     def write_data(self):
-
+        print(f"Starting data write of {self.run_name}")
         master_data = list()
         frame_folder = os.path.join(self.write_folder, f"{self.run_name}_step_frames")
         if not os.path.exists(frame_folder):
