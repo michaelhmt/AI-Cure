@@ -8,8 +8,6 @@ import pytesseract
 
 # own modules
 import screen_reader_constants
-from screen_reader.font_train.training_utils import file_path_generator
-from screen_reader.font_train.training_utils import str_is_similar
 
 class ScreenReaderBase():
     """

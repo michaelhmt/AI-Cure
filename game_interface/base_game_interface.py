@@ -1,10 +1,5 @@
 # python built in
-import subprocess
-import time
-import os
 import numpy
-import pathlib
-
 
 # site packages
 import win32gui
@@ -12,9 +7,6 @@ import win32process
 import psutil
 import win32con
 import win32ui
-import cv2
-import pytesseract
-from PIL import Image
 
 # own modules
 import project_constants
@@ -25,12 +17,6 @@ from memory_reader.game_state import MemoryGameState
 from screen_reader.game_screen_vision.vision_class import GameVisionClass
 from screen_reader.screen_reader_constants import ScreenReadException
 from memory_reader.GameMemoryClass import GameMemoryClass
-
-import screen_reader.screen_reader_constants as screen_reader_constants
-from screen_reader.game_screen_vision.vision_utils import make_hcure_game_states
-from screen_reader.font_train.training_utils import str_is_similar
-import screen_reader.game_screen_vision.vision_utils as vision_utils
-
 
 
 class BaseGameInterface:

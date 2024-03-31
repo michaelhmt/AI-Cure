@@ -1,7 +1,6 @@
 # python built in
 import os.path
 import pathlib
-import matplotlib.pyplot as plt
 import json
 
 # site packages

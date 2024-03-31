@@ -9,7 +9,6 @@ from typing import Union, Generator
 # site packages
 import cv2
 import fuzzywuzzy.fuzz
-from fuzzywuzzy import fuzz
 
 # own modules
 import project_constants

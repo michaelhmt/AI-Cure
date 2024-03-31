@@ -2,9 +2,7 @@ import time
 
 import pymem
 # Site package
-from pymem import Pymem
 from pymem.process import module_from_name
-import psutil
 
 from memory_reader.mem_addresses import GameMemoryReadException
 

@@ -4,7 +4,6 @@ import time
 
 # site packages
 from gymnasium import Env, spaces
-import pyautogui
 import pydirectinput
 import numpy as np 
 

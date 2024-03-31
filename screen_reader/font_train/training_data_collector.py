@@ -6,7 +6,6 @@ import shutil
 
 # site packages
 import pyautogui
-import keyboard
 
 # own modules
 import project_constants

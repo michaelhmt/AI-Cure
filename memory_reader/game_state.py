@@ -1,6 +1,5 @@
 # python built in
 import copy
-from typing import Tuple, Any
 
 # own modules
 import memory_reader.mem_addresses as mem_constants

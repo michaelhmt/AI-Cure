@@ -13,8 +13,6 @@ import project_constants
 from config.hcure_config import HcureConfig
 from screen_reader.screen_reader_constants import HCURE_ROIS
 from memory_reader.mem_addresses import IN_GAME_STATES, STATE_CHECK_KEY
-from screen_reader.game_screen_vision.vision_class import GameVisionClass
-from memory_reader.GameMemoryClass import GameMemoryClass
 from memory_reader.prep_with_cheat_engine import CheatEngineHoloCure
 
 from screen_reader.game_screen_vision.state_object import GameVisualState as VisualGameState

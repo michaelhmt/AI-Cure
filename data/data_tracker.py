@@ -6,7 +6,6 @@ from datetime import datetime
 
 
 # site packages
-import numpy as np
 from PIL import Image
 
 class StepSummary:

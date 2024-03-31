@@ -2,16 +2,10 @@
 import subprocess
 import time
 import os
-import numpy
 import pathlib
 
 
 # site packages
-import win32gui
-import win32process
-import psutil
-import win32con
-import win32ui
 import cv2
 import pytesseract
 from PIL import Image

@@ -8,7 +8,6 @@ import datetime
 
 # project modules
 from config.base_config import BaseConfig
-from gym.base_gym import BaseEnv
 from screen_reader.game_screen_vision.vision_class import GameVisionClass
 from game_interface.hcure_interface import HcureGameInterface
 from memory_reader.GameMemoryClass import GameMemoryClass

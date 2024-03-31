@@ -1,6 +1,5 @@
 # python built in
 import copy
-from typing import Tuple, Any
 
 # own modules
 import screen_reader.screen_reader_constants as screen_reader_constants
