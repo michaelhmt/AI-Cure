@@ -12,5 +12,6 @@ pydirectinput~=1.0.4
 pygetwindow~=0.0.9
 pandas~=2.1.4
 pymem~=1.13.0
-pywin32~=306
+pywin32==306
 opencv-python==4.8.1.78
+stable-baselines3==2.2.1
