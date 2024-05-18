@@ -4,7 +4,6 @@ matplotlib~=3.7.2
 fuzzywuzzy~=0.18.0
 pillow~=10.2.0
 pyautogui~=0.9.54
-keyboard~=0.13.5
 psutil~=5.9.6
 pyyaml~=6.0.1
 numpy~=1.26.0
@@ -13,5 +12,3 @@ pygetwindow~=0.0.9
 pandas~=2.1.4
 pymem~=1.13.0
 pywin32==306
-opencv-python==4.8.1.78
-stable-baselines3==2.2.1
