@@ -22,6 +22,7 @@ class DataViewerUI(Ui_MainWindow):
     own_dir = os.path.dirname(os.path.abspath(__file__))
 
     def __init__(self, mainwindow):
+        # type: (QtCore.QMainWindow) -> None
         super(DataViewerUI, self).__init__()
 
         # on the base window
@@ -35,6 +36,10 @@ class DataViewerUI(Ui_MainWindow):
         self.connect_signals()
 
     def make_frame_viewer(self):
+        """
+        Make the image widget we will apply our frame image to
+        """
+
         self.imge_widget = FrameViewer(self.centralwidget)
         self.imge_widget.setMinimumSize(QtCore.QSize(1296, 759))
         self.imge_widget.setMaximumSize(QtCore.QSize(1296, 759))
@@ -64,6 +69,14 @@ class DataViewerUI(Ui_MainWindow):
         self.btn_step_to_poi.clicked.connect(lambda: self.on_request_poi(backwards=False))
 
     def on_request_poi(self, backwards=False):
+        # type: (bool) -> None
+        """
+        On the user requesting the next point of interest on the time.
+
+        Args:
+            backwards : If True will find the POI behind the current frame not in front.
+
+        """
         self.request_poi.emit(self.get_enabled_features(), backwards)
 
     def get_enabled_features(self):
@@ -211,9 +224,11 @@ class DataViewerUI(Ui_MainWindow):
             self.data_loaded.emit(file_path)
 
     def set_frame(self, frame_number):
+        # type: (int) -> None
         self.timeline_widget.setValue(frame_number)
 
     def set_ui_to_data(self, frames, features, data_name):
+        # type: (int, list[str], str) -> None
         """
         On the load of new data will set the UI to the given data
 
@@ -239,12 +254,14 @@ class DataViewerUI(Ui_MainWindow):
             self.feature_reg[feature_name] = feature_checkbox
 
         self.update_slider_background()
+
 class ValueWidget(QWidget):
     """
     Widget for representing data of a given label
     """
 
     def __init__(self, label, parent=None):
+        # type: (str, QtWidgets.QWidget) -> None
         super().__init__(parent)
         self.icon_pixmap = None
         self.label = label

@@ -19,7 +19,13 @@ from stable_baselines3.common import env_checker
 from stable_baselines3.common.callbacks import BaseCallback
 
 class GameMonitiorCallBack(BaseCallback):
+    """
+    Is used to communicate between training methods,
+    given game interface to pause an sample game states
+    """
+
     def __init__(self, print_freq, pause_step, game_interface, verbose=1):
+        # type: (int, int, HcureGameInterface, int) -> None
         super(GameMonitiorCallBack, self).__init__(verbose)
         self.print_freq = print_freq
 
@@ -43,11 +49,17 @@ class GameMonitiorCallBack(BaseCallback):
         return True
 
 class BaseApp:
+    """
+    Class for running training as connecting game interface with training env.
+    Also forms the game states and state interfaces
+    """
+
     own_path = pathlib.Path(__file__).parent.resolve()
     own_app_dir = os.path.join(own_path, "test_data")
 
 
     def __init__(self, app_name: str, config: BaseConfig, env, check_env=False, app_proc=None):
+
         # main vars
         self._name = app_name
         self._config = config
@@ -104,11 +116,24 @@ class BaseApp:
         return self._env
 
     def re_target_new_proc(self, new_proc):
+        # type: (subprocess.Popen) -> None
+        """
+        for switching the app to and child game interfaces to a new game process
+
+        Args:
+            new_proc: the new process we will switch to
+
+        """
+
         self.app_proc = new_proc
         self.proc_id = self.app_proc.pid
         self.memory_class.retarget_proc(self.proc_id)
 
     def activate_interface(self):
+        """
+        Activates the game interface as well as game state interfaces, also adds the known states
+        """
+
         if not self.app_proc:
             self.app_proc = subprocess.Popen(self.target_exe_path)
             time.sleep(self.start_up_delay)
@@ -122,6 +147,10 @@ class BaseApp:
         self.interface_object.add_known_states()
 
     def find_save_paths(self):
+        """
+        Sets the app output paths
+        """
+
         user_set_output_path = self._config.get_output_path()
         if user_set_output_path:
             app_folder_path = user_set_output_path
@@ -134,9 +163,23 @@ class BaseApp:
         self.model_out_put_dir = output_dir
 
     def add_info_mem_interface(self, info_to_add):
+        # type: (dict) -> None
+        """
+        Specific method for passing data to the game memory interface
+
+        Args:
+            info_to_add: Data that will be passed into the running game memory interface
+
+        Returns:
+        """
+
         self.memory_class.add_app_data(info_to_add)
 
     def run_training(self):
+        """
+        Actually run the training this app ensure all states are set up and configured
+        """
+
         self.total_time_steps = self.run_steps * self.runs_per_update
 
         self._model = PPO('CnnPolicy', self.env, verbose=1, n_steps=self.total_time_steps,
@@ -156,7 +199,9 @@ class BaseApp:
             self._model.save(checkpoint_save_path)
 
     def run_testing_interface(self):
-
+        """
+        for manually testing if state checking is working
+        """
         while True:
             current_state = self.interface_object.find_current_state()
             current_state_name = self.interface_object.current_state.name

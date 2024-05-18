@@ -6,6 +6,10 @@ import project_constants
 
 class BaseConfig:
 
+    """
+    Class for interacting with the config yaml
+    """
+
     def __init__(self, yaml_path, add_top_level_attrs=True):
         # type: (str, bool) -> None
         self._yaml_path = yaml_path

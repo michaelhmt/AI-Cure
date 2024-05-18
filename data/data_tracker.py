@@ -31,7 +31,7 @@ class StepSummary:
     #     }
     #     self._step_vision = vision_data
     #
-    # @step_vision.getter
+    # @step_vision.getter-
     # def step_vision(self):
     #     image_array = msgpack.unpackb(self._step_vision["image_serialized"], object_hook=m.decode)
     #     return image_array

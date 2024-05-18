@@ -17,6 +17,8 @@ from memory_reader.prep_with_cheat_engine import CheatEngineHoloCure
 
 from screen_reader.game_screen_vision.state_object import GameVisualState as VisualGameState
 from memory_reader.game_state import MemoryGameState
+from memory_reader.GameMemoryClass import GameMemoryClass
+from screen_reader.game_screen_vision.vision_class import GameVisionClass
 
 def start_hcure(config):
     # type: (HcureConfig) -> subprocess.Popen
@@ -35,6 +37,23 @@ def start_hcure(config):
     return proc
 
 def make_hcure_states(memory_interface, game_vision_interface):
+    # type: (GameMemoryClass, GameVisionClass) -> list[MemoryGameState, VisualGameState]
+    """
+    for making all the states associated with holocure,
+    specifically the game memory and the vision based states.
+    Needs the interfaces, order really matters here since
+    this is the order they are checked in. Make sure vision based states are last
+    as they require more  processing time.
+
+
+    Args:
+        memory_interface: The interface we will use for reading the game memory
+        game_vision_interface: The interface we will use for testing the visual state of the game
+
+    Returns:
+        List of all Game states, order matter for this list as its also the run order
+
+    """
 
     states = list()
 
@@ -64,6 +83,12 @@ def make_hcure_states(memory_interface, game_vision_interface):
     return states
 
 def char_select_to_game():
+    """
+    Super basic function for just skipping from char select to in game and getting the AI to the starting point.
+    Returns:
+
+    """
+
     game_window = pygetwindow.getWindowsWithTitle("HoloCure")[0]
     game_window.activate()
 
@@ -78,6 +103,20 @@ def char_select_to_game():
     pydirectinput.press("enter")
 
 def get_game_state_from_cheat_engine_report(proc_id):
+    # type: (int) -> dict[str]
+    """
+    Opens cheat engine auto controls it to launch the Holocure cheat table, attach it to the proc,
+    and write the proc report out. and then format the report
+    into a dict that can be passed to the game memory interface class.
+
+    Args:
+        proc_id: the ID of the proc we want to find the report for
+
+    Returns:
+        a dict with all the data collected form the report for this proc id.
+
+    """
+    # start cheat engine and make report
     report_target = f"C:\\ai_knight\\cheat_engine_report_{proc_id}.txt"
     cheat_engine = CheatEngineHoloCure()
     cheat_engine.start_cheat_engine()
@@ -86,6 +125,7 @@ def get_game_state_from_cheat_engine_report(proc_id):
         print(f"could not find created report for {report_target}")
         return
 
+    # if we found the data write the report
     with open(report_target, "r") as report_file:
         report_data = dict()
         report_lines = report_file.readlines()
@@ -104,6 +144,10 @@ def get_game_state_from_cheat_engine_report(proc_id):
     return report_data
 
 def clear_files_in_report_folder():
+    """
+    clear any old report file out from the folder
+    """
+
     report_folder = "C:\\ai_knight"
     # Ensure the folder exists
     if not os.path.exists(report_folder):

@@ -6,8 +6,8 @@ from pymem.process import module_from_name
 
 from memory_reader.mem_addresses import GameMemoryReadException
 
-
 class GameMemoryClass:
+
     def __init__(self, proc_id):
         self.proc_id = proc_id
 
@@ -17,6 +17,16 @@ class GameMemoryClass:
 
         # extra_adresses
         self.extra_adresses = dict()
+
+    @property
+    def type_look_ups(self):
+        type_look_ups = {
+            "double": self.game_exe.read_double,
+            "longlong": self.game_exe.read_longlong,
+            "str": self.game_exe.read_string,
+            "int": self.game_exe.read_int
+        }
+        return type_look_ups
 
     def retarget_proc(self, new_proc_id):
         self.proc_id = new_proc_id
@@ -48,6 +58,11 @@ class GameMemoryClass:
             address_base = address_info['base']
             address_offsets = address_info['offsets']
             return self.game_exe.read_double(self.calculate_address(self.game_module + address_base, address_offsets))
+
+    # def get_report_value(self, report_key, value_type="double"):
+    #     try:
+    #         if
+    #         self.game_exe.r
 
     def state_is_active(self, state_to_check):
         """
