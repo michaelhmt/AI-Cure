@@ -1,0 +1,31 @@
+# Use the latest Windows base image
+FROM mcr.microsoft.com/windows:ltsc2019
+
+# Set up environment variables
+ENV PYTHON_VERSION=3.10.4
+ENV CHEAT_ENGINE_VERSION=7.4
+ENV GIT_REPO_URL=https://github.com/michaelhmt/AI-Cure.git
+ENV REPO_DIR=C:/repository
+
+# Install Chocolatey for package management
+RUN @powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
+
+# Install Python and Cheat Engine using Chocolatey
+RUN choco install python --version=%PYTHON_VERSION% -y
+RUN choco install git -y
+RUN choco install cheat-engine --version=%CHEAT_ENGINE_VERSION% -y
+
+# Add Python to PATH
+RUN setx PATH "%PATH%;C:\Python310;C:\Python310\Scripts"
+
+# Clone the GitHub repository
+RUN git clone %GIT_REPO_URL% %REPO_DIR%
+
+# Set the working directory to the cloned repository
+WORKDIR %REPO_DIR%
+
+# Install Python dependencies from requirements.txt
+RUN pip install -r requirements.txt
+
+# Set the entry point to run the desired Python script from the repository
+ENTRYPOINT ["python", "train.py"]
