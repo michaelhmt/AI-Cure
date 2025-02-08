@@ -7,9 +7,9 @@ training_settings:
   actions_per_second: 4
   max_steps: 5000
   #output_dir: None # will default to project output dir
-  run_steps: 512
+  run_steps: 64
   runs_per_update: 3
-  updates_per_checkpoint: 4
+  updates_per_checkpoint: 4ss
   learn_steps: 40
 
 vision_settings:

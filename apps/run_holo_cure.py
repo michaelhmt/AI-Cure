@@ -1,6 +1,6 @@
 # project modules
 from apps.base_app import BaseApp
-from gym.hCure_env import HCureEnv
+from gyms.hCure_env import HCureEnv
 from config.hcure_config import HcureConfig
 import apps.hcure_utils as hcure_utils
 import project_constants

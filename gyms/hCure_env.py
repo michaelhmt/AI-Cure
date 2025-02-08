@@ -5,7 +5,7 @@ import traceback
 
 # project modules
 import project_constants
-from gym.base_gym import BaseEnv, RewardData
+from gyms.base_gym import BaseEnv, RewardData
 from game_interface.hcure_interface import HcureGameInterface
 from config.hcure_config import HcureConfig
 import apps.hcure_utils as hcure_utils
@@ -16,10 +16,12 @@ from data.hcure_data_tracker import HCureDataTracker
 
 # Site Packages
 import psutil
+import numpy
 
 # constants
 REWARD_FOR_INCREASE_KEY = "increased"
 REWARD_FOR_DECREASE_KEY = "decreased"
+
 
 def time_pre_processor(time_str):
     time_int_token = time_str.split(":")
@@ -28,6 +30,7 @@ def time_pre_processor(time_str):
 
     pure_seconds_value = (minutes * 60) + seconds
     return pure_seconds_value
+
 
 class HCureEnv(BaseEnv):
     _action_map = dict()
@@ -74,7 +77,6 @@ class HCureEnv(BaseEnv):
 
         return self.game_interface.get_window_array(), {}
 
-
     def run_step(self, action_to_take, data_tracker):
         reward = 0
         self.game_interface.find_current_state()
@@ -85,7 +87,7 @@ class HCureEnv(BaseEnv):
             current_state_name = "No state"
 
         data_tracker.current_state = current_state_name
-        print(f"{'='*10}\nIn state: {current_state_name}\n {'='*10}")
+        print(f"{'=' * 10}\nIn state: {current_state_name}\n {'=' * 10}")
         state_settings = self.state_map.get(current_state_name)
 
         key_to_press = self.action_map.get(action_to_take)
@@ -138,7 +140,7 @@ class HCureEnv(BaseEnv):
         reward_data_tracking = dict()
         for reward_var_name, state_roi_value in state_data.items():
             if reward_var_name in self._reward_table.keys():
-                reward_data = self._reward_table[reward_var_name] # type: RewardData
+                reward_data = self._reward_table[reward_var_name]  # type: RewardData
             else:
                 continue
 
@@ -158,7 +160,6 @@ class HCureEnv(BaseEnv):
 
         return current_screen_state, reward, False, is_done, {}
 
-
     def step(self, action):
         with self.data_tracker as data_tracker:
             if self.game_interface.is_paused:
@@ -166,12 +167,12 @@ class HCureEnv(BaseEnv):
                 self.game_interface.pause()
             try:
                 step_data = self.run_step(action, data_tracker)
-            except(GameMemoryReadException, screen_reader_constants.ScreenReadException) as e:
+            except (GameMemoryReadException, screen_reader_constants.ScreenReadException) as e:
                 print("Failed to read from exe writing data and ending....")
                 print(f"error was {e}")
                 print(f"Traceback is: {traceback.format_exc()}")
                 data_tracker.write_data()
-                return [], 0, False, True, {}
+                return numpy.ndarray([]), 0, False, True, {}
 
             return step_data
 

@@ -48,6 +48,7 @@ class DataTracker:
         self._step_history = list()
         self.tracker_name = data_name
         self.run_name = run_name
+        self.write_number = 1
         self.write_folder = self.get_write_folder()
 
         self._static_data = dict()
@@ -94,14 +95,15 @@ class DataTracker:
         self._static_data[data_label] = data_to_add
 
     def write_data(self):
-        print(f"Starting data write of {self.run_name}")
+        write_batch_name = f"{self.run_name}_{str(self.write_number).zfill(5)}"
+        print(f"Starting data write of {write_batch_name}")
         master_data = list()
-        frame_folder = os.path.join(self.write_folder, f"{self.run_name}_step_frames")
+        frame_folder = os.path.join(self.write_folder, f"{write_batch_name}_step_frames")
         if not os.path.exists(frame_folder):
             os.makedirs(frame_folder)
         for index, recorded_step in enumerate(self._step_history):  # type: (int, StepSummary)
             step_number = str(index + 1).zfill(10)
-            image_save_path = os.path.join(frame_folder, f"{self.run_name}_step_{step_number}.png")
+            image_save_path = os.path.join(frame_folder, f"{write_batch_name}_step_{step_number}.png")
             frame_image = Image.fromarray(recorded_step.step_vision)
             frame_image.save(image_save_path)
             data = {
@@ -121,16 +123,17 @@ class DataTracker:
         formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
         meta_data = {
             "write_time": formatted_now,
-            "model_run_name": self.run_name
+            "model_run_name": write_batch_name
         }
         meta_data.update(self._static_data)
 
         master_data.append(meta_data)
         print(f"Have {len(master_data)} steps recorded ")
-        write_file_path = os.path.join(self.write_folder, f"{self.run_name}_data_list.json")
+        write_file_path = os.path.join(self.write_folder, f"{write_batch_name}_data_list.json")
         with open(write_file_path, "w+") as write_file:
             json.dump(master_data, write_file, indent=4)
 
+        self.write_number += 1
         print(f"written data for {self.run_name}")
 
 

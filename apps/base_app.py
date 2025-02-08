@@ -175,6 +175,10 @@ class BaseApp:
 
         self.memory_class.add_app_data(info_to_add)
 
+    def find_batch_size(self, current_batch_size):
+        # should check remainder, but for now assume even power of 4 numbers
+        return int(current_batch_size / 2)
+
     def run_training(self):
         """
         Actually run the training this app ensure all states are set up and configured
@@ -182,8 +186,15 @@ class BaseApp:
 
         self.total_time_steps = self.run_steps * self.runs_per_update
 
-        self._model = PPO('CnnPolicy', self.env, verbose=1, n_steps=self.total_time_steps,
-                          batch_size=128, n_epochs=3, gamma=0.98)
+        batch_size = self.run_steps
+        while batch_size > 128:
+
+
+            batch_size = self.find_batch_size(batch_size)
+
+        print(f"Making Model with: \n n_steps = {self.total_time_steps}\n batch_size = {batch_size}")
+        self._model = PPO('CnnPolicy', env=self._env, verbose=1, n_steps=self.total_time_steps,
+                          batch_size=batch_size, n_epochs=3, gamma=0.98)
 
         self.call_back = GameMonitiorCallBack(print_freq=10, pause_step=self.total_time_steps,
                                               game_interface=self.interface_object, verbose=1)
