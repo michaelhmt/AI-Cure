@@ -13,9 +13,13 @@ import project_constants
 
 
 REPORT_MAKER_TABLE = project_constants.CHEAT_ENGINE_TABLE_PATH
-CONFIRM_WINDOW_YES_BUTTON = {"window_name": "Confirmation", "x": 242, "y":98}
+CONFIRM_WINDOW_YES_BUTTON = {"window_name": "Confirmation", "x": 364, "y":140}
 CHEAT_ENGINE_TABLE_MID = {"window_name": "Cheat Engine 7.5", "x": 697, "y":776}
-TABLE_WRITE_REPORT = {"window_name": "Cheat Engine 7.5", "x": 38, "y":1119}
+CHEAT_ENGINE_FILE_MENU = {"window_name": "Cheat Engine 7.5", "x": 23, "y":55}
+CHEAT_ENGINE_FILE_RECENT = {"window_name": "Cheat Engine 7.5", "x": 76, "y":382}
+CHEAT_ENGINE_MOST_RECENT = {"window_name": "Cheat Engine 7.5", "x": 506, "y":382}
+
+TABLE_WRITE_REPORT = {"window_name": "Cheat Engine 7.5", "x": 40, "y":900}
 
 
 def start_cheat_engine_task():
@@ -79,37 +83,51 @@ class CheatEngineHoloCure:
     # so this is dumb but we have to operate cheat engine using only the mouse
     def start_cheat_engine(self):
         # start the app
-        try:
-            cheat_engine = start_cheat_engine_task()
-            time.sleep(2)
+        cheat_engine = start_cheat_engine_task()
+        time.sleep(2)
 
-            # click yes on confirm window
-            target_info = CONFIRM_WINDOW_YES_BUTTON
+        # load the table
+        target_info = CHEAT_ENGINE_FILE_MENU
+        self.make_window_active(target_info["window_name"])
+        self.get_window_and_click_target(target_info["window_name"],
+                                         target_info["x"],
+                                         target_info["y"])
 
-            self.make_window_active(target_info["window_name"])
-            self.get_window_and_click_target(target_info["window_name"],
-                                             target_info["x"],
-                                             target_info["y"])
-            time.sleep(3)
-            target_info = CHEAT_ENGINE_TABLE_MID
-            self.make_window_active(target_info["window_name"])
-            self.get_window_and_click_target(target_info["window_name"],
-                                             target_info["x"],
-                                             target_info["y"],
-                                             click=False)
-            pyautogui.scroll(-1000000)
-            time.sleep(1)
+        target_info = CHEAT_ENGINE_FILE_RECENT
+        self.make_window_active(target_info["window_name"])
+        self.get_window_and_click_target(target_info["window_name"],
+                                         target_info["x"],
+                                         target_info["y"])
 
-            target_info = TABLE_WRITE_REPORT
-            self.make_window_active(target_info["window_name"])
-            self.get_window_and_click_target(target_info["window_name"],
-                                             target_info["x"],
-                                             target_info["y"])
-            time.sleep(3)
-            self.force_close_window(target_info["window_name"])
-            return True
-        except Exception:
-            return False
+        target_info = CHEAT_ENGINE_MOST_RECENT
+        self.make_window_active(target_info["window_name"])
+        self.get_window_and_click_target(target_info["window_name"],
+                                         target_info["x"],
+                                         target_info["y"])
+
+        # click yes on confirm window
+        target_info = CONFIRM_WINDOW_YES_BUTTON
+        self.make_window_active(target_info["window_name"])
+        self.get_window_and_click_target(target_info["window_name"],
+                                         target_info["x"],
+                                         target_info["y"])
+        time.sleep(3)
+        target_info = CHEAT_ENGINE_TABLE_MID
+        self.make_window_active(target_info["window_name"])
+        self.get_window_and_click_target(target_info["window_name"],
+                                         target_info["x"],
+                                         target_info["y"],
+                                         click=False)
+        pyautogui.scroll(-1000000)
+        time.sleep(1)
+
+        target_info = TABLE_WRITE_REPORT
+        self.make_window_active(target_info["window_name"])
+        self.get_window_and_click_target(target_info["window_name"],
+                                         target_info["x"],
+                                         target_info["y"])
+        time.sleep(3)
+        self.force_close_window(target_info["window_name"])
 
 if __name__ == "__main__":
     cheat_engine = CheatEngineHoloCure()

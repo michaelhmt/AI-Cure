@@ -28,7 +28,8 @@ LVL_TEXT = {"start_x": 1182, "start_y": 36, "end_x": 1221, "end_y": 68, STATE_CH
 CHAR_NAME = {"start_x": 160, "start_y": 275, "end_x": 364, "end_y": 304}
 
 # char select coords
-SCREEN_HEADER = {"start_x": 452, "start_y": 53, "end_x": 838, "end_y": 97, STATE_CHECK_RESULTS_STR: "CHOOSEROPFMNAOOIL"}
+SCREEN_HEADER = {"start_x": 452, "start_y": 53, "end_x": 838, "end_y": 97, STATE_CHECK_RESULTS_STR: "UOPDOONCCCLRTITNI"} # "CHOOSEROPFMNAOOIL"
+# ^ this is dumb but its what the vision model reads it has
 SELECTED_NAME = {"start_x": 52, "start_y": 474, "end_x": 382, "end_y": 509}
 
 # level up

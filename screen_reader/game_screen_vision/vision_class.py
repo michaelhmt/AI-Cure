@@ -3,7 +3,7 @@ import subprocess
 import time
 import os
 import pathlib
-
+import pprint
 
 # site packages
 import cv2
@@ -141,6 +141,9 @@ class GameVisionClass:
                   "gathered_result": result_str,
                   "in_this_game_state": str_is_similar(result_str, expected_result),
                   "state_name": state_to_check.name}
+
+        print("vision check results: ")
+        pprint.pprint(result)
 
         return in_this_state
         # self.current_state = None
